@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Humana Brasil — Gerador de Ficha, Us to Us e Marco Lógico</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--hb-green:#1E7E34;--hb-accent:#FFC857;--ink:#1b1b1b;--bg:#fafafa;--muted:#667085}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:900px;margin:0 auto;padding:20px}
+    header{text-align:center;padding-top:28px}
+    .brand{display:inline-flex;align-items:center;gap:12px;justify-content:center}
+    .logo{width:44px;height:44px}
+    h1{margin:10px 0 6px;font-size:26px}
+    p.lead{color:var(--muted);margin:0 0 10px}
+    form{background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    label{display:block;margin:12px 0;font-weight:600}
+    input,textarea{width:100%;margin-top:6px;border:1px solid #d8dee4;border-radius:8px;padding:10px;font:inherit}
+    input[type=url]{word-break:break-all}
+    fieldset{border:1px solid #e3e8ee;border-radius:10px;padding:10px 12px;margin:14px 0}
+    legend{font-weight:600}
+    .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+    .checks label{display:flex;align-items:center;gap:8px;margin:4px 0;font-weight:500}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:720px){.row{grid-template-columns:1fr}}
+    button{background:var(--hb-green);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;cursor:pointer}
+    button:hover{filter:brightness(1.05)}
+    .btn{display:inline-block;background:var(--hb-accent);color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600}
+    .hidden{display:none}
+    .status{min-height:22px;color:var(--muted);margin:10px 0 0}
+    footer{color:#80888c;font-size:12px;text-align:center;padding:24px 0}
+    .note{font-size:12px;color:#80888c;margin-top:6px}
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <div class="brand">
+      <!-- SVG simples para manter arquivo único -->
+      <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="none" stroke="#1E7E34" stroke-width="4"/>
+        <path d="M20 34c6-10 18-10 24 0M24 40c4-6 12-6 16 0" fill="none" stroke="#1E7E34" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <strong>Humana Povo para Povo Brasil</strong>
+    </div>
+    <h1>Gerador de Ficha, Us to Us e Marco Lógico</h1>
+    <p class="lead">Descreva o projeto, cole o link do edital, escolha os formatos, baixe o XLSX.</p>
+  </header>
+
+  <main class="wrap">
+    <form id="docForm" novalidate>
+      <div class="row">
+        <label>Título do projeto
+          <input name="title" required maxlength="140" placeholder="Título curto">
+        </label>
+        <label>Link do edital
+          <input name="edital_url" type="url" required placeholder="https://exemplo.org/chamada.pdf ou página da chamada">
+        </label>
+      </div>
+
+      <label>Objetivo geral
+        <textarea name="obj_geral" required rows="3" placeholder="Defina a mudança central pretendida"></textarea>
+      </label>
+
+      <label>Objetivos específicos
+        <textarea name="obj_espec" required rows="4" placeholder="Liste um por linha"></textarea>
+      </label>
+
+      <fieldset>
+        <legend>Formatos de saída</legend>
+        <div class="checks">
+          <label><input type="checkbox" name="outputs" value="ficha" checked> Ficha de Identificação</label>
+          <label><input type="checkbox" name="outputs" value="ustuus"> Us to Us</label>
+          <label><input type="checkbox" name="outputs" value="marcologico"> Marco Lógico</label>
+        </div>
+      </fieldset>
+
+      <button type="submit" id="submitBtn">Gerar XLSX</button>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+
+      <div id="result" class="hidden" style="margin-top:12px">
+        <a id="downloadLink" class="btn" href="#" download>Baixar XLSX</a>
+        <div class="note">O link expira conforme sua configuração no backend.</div>
+      </div>
+    </form>
+  </main>
+
+  <footer>© Humana Povo para Povo Brasil</footer>
+
+  <script>
+    // Cole a URL do seu webhook do Make
+    const WEBHOOK_URL = 'https://hook.make.com/SEU_WEBHOOK';
+
+    const form = document.getElementById('docForm');
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    const linkEl = document.getElementById('downloadLink');
+    const btn = document.getElementById('submitBtn');
+
+    function validURL(u){
+      try{ const url = new URL(u); return url.protocol === 'http:' || url.protocol === 'https:'; }catch{ return false; }
+    }
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      statusEl.textContent = '';
+      resultEl.classList.add('hidden');
+
+      const data = new FormData(form);
+      const outputs = Array.from(form.querySelectorAll('input[name="outputs"]:checked')).map(i=>i.value);
+
+      if(outputs.length === 0){
+        statusEl.textContent = 'Selecione ao menos um formato.';
+        return;
+      }
+      const editalURL = data.get('edital_url');
+      if(!validURL(editalURL)){
+        statusEl.textContent = 'Informe um link válido do edital.';
+        return;
+      }
+
+      // Forçar array para o Make
+      outputs.forEach(v=>data.append('outputs[]', v));
+
+      // UX
+      btn.disabled = true;
+      btn.textContent = 'Gerando...';
+      statusEl.textContent = 'Processando. Pode levar alguns segundos dependendo do edital.';
+
+      try{
+        const res = await fetch(WEBHOOK_URL, { method:'POST', body:data });
+        if(!res.ok){
+          const text = await res.text().catch(()=> '');
+          throw new Error('Falha no backend: ' + text);
+        }
+        const json = await res.json();
+        if(!json.downloadUrl){ throw new Error('downloadUrl ausente na resposta'); }
+
+        linkEl.href = json.downloadUrl;
+        resultEl.classList.remove('hidden');
+        statusEl.textContent = 'Pronto para baixar.';
+      }catch(err){
+        console.error(err);
+        statusEl.textContent = 'Erro ao gerar. Verifique o link do edital e tente novamente.';
+      }finally{
+        btn.disabled = false;
+        btn.textContent = 'Gerar XLSX';
+      }
+    });
+  </script>
+</body>
+</html>
