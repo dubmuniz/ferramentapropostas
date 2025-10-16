@@ -46,3 +46,47 @@
 <footer class="wrap small">© Humana Povo para Povo Brasil</footer>
 <script src="script.js"></script>
 </body></html>
+:root{--ink:#1b1b1b;--bg:#fafafa;--muted:#637074}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:900px;margin:0 auto;padding:20px}
+header{text-align:center;padding-top:28px}.logo{height:54px}
+h1{margin:14px 0 8px;font-size:26px}
+p{color:var(--muted)}
+form{background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+label{display:block;margin:12px 0;font-weight:600}
+input[type=file],input,textarea{width:100%;margin-top:6px;border:1px solid #d8dee4;border-radius:8px;padding:10px;font:inherit}
+fieldset{border:1px solid #e3e8ee;border-radius:10px;padding:10px 12px;margin:12px 0}
+legend{font-weight:600}
+button{background:#1E7E34;color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;cursor:pointer}
+button:hover{filter:brightness(1.05)}
+.btn{display:inline-block;background:#FFCB70;color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600}
+.hidden{display:none}.small{font-size:12px;color:#80888c}
+
+const FORM = document.getElementById('docForm');
+const STATUS = document.getElementById('status');
+const RESULT = document.getElementById('result');
+const LINK = document.getElementById('downloadLink');
+
+// cole a URL do webhook do Make aqui
+const WEBHOOK_URL = 'https://hook.make.com/SEU_WEBHOOK';
+
+FORM.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  STATUS.textContent = 'Processando...';
+  const formData = new FormData(FORM);
+  // Capturar checkboxes manualmente para garantir array
+  const outputs = Array.from(FORM.querySelectorAll('input[name="outputs"]:checked')).map(i=>i.value);
+  outputs.forEach(v=>formData.append('outputs[]', v));
+
+  try{
+    const res = await fetch(WEBHOOK_URL, { method:'POST', body: formData });
+    if(!res.ok) throw new Error('Falha no processamento');
+    const data = await res.json(); // { downloadUrl: "..." }
+    LINK.href = data.downloadUrl;
+    RESULT.classList.remove('hidden');
+    STATUS.textContent = 'Pronto';
+  }catch(err){
+    STATUS.textContent = 'Erro. Tente novamente.';
+    console.error(err);
+  }
+});
