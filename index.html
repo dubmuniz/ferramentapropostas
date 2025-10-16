@@ -91,66 +91,90 @@
 
   <footer>© Humana Povo para Povo Brasil</footer>
 
-  <script>
-    // Cole a URL do seu webhook do Make
-    const WEBHOOK_URL = 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd';
+ <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+<script>
+const WEBHOOK_URL = 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd';
+const form = document.getElementById('docForm');
+const statusEl = document.getElementById('status');
+const resultEl = document.getElementById('result');
+const linkEl = document.getElementById('downloadLink');
+const btn = document.getElementById('submitBtn');
 
-    const form = document.getElementById('docForm');
-    const statusEl = document.getElementById('status');
-    const resultEl = document.getElementById('result');
-    const linkEl = document.getElementById('downloadLink');
-    const btn = document.getElementById('submitBtn');
+function validURL(u){ try{ const x=new URL(u); return ['http:','https:'].includes(x.protocol) }catch{ return false } }
 
-    function validURL(u){
-      try{ const url = new URL(u); return url.protocol === 'http:' || url.protocol === 'https:'; }catch{ return false; }
-    }
+function aoaFromKeyRows(rows, headers){
+  // rows = array de objetos homogêneos; headers = array com ordem das colunas
+  const aoa = [headers];
+  for(const r of rows){ aoa.push(headers.map(h=> r[h] ?? '')); }
+  return aoa;
+}
 
-    form.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      statusEl.textContent = '';
-      resultEl.classList.add('hidden');
+function baixarXLSX(payload, nomeArquivo){
+  const wb = XLSX.utils.book_new();
 
-      const data = new FormData(form);
-      const outputs = Array.from(form.querySelectorAll('input[name="outputs"]:checked')).map(i=>i.value);
+  if(payload.ficha?.enabled){
+    // Ficha: rows [{Campo,Conteúdo}]
+    const headers = ["Campo","Conteúdo"];
+    const aoa = aoaFromKeyRows(payload.ficha.rows, headers);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    XLSX.utils.book_append_sheet(wb, ws, "Ficha");
+  }
+  if(payload.ustuus?.enabled){
+    // UsToUs: rows [{Seção,Texto}]
+    const headers = ["Seção","Texto"];
+    const aoa = aoaFromKeyRows(payload.ustuus.rows, headers);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    XLSX.utils.book_append_sheet(wb, ws, "UsToUs");
+  }
+  if(payload.marcologico?.enabled){
+    // Marco Lógico: colunas fixas
+    const headers = ["Objetivo Geral","Objetivo Específico","Resultado","Indicador","Meta","Linha de base","Meio de Verificação","Atividades","Premissas/Riscos","Cronograma","Responsável"];
+    const aoa = aoaFromKeyRows(payload.marcologico.rows, headers);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    XLSX.utils.book_append_sheet(wb, ws, "MarcoLogico");
+  }
 
-      if(outputs.length === 0){
-        statusEl.textContent = 'Selecione ao menos um formato.';
-        return;
-      }
-      const editalURL = data.get('edital_url');
-      if(!validURL(editalURL)){
-        statusEl.textContent = 'Informe um link válido do edital.';
-        return;
-      }
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const blob = new Blob([wbout], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const url = URL.createObjectURL(blob);
+  linkEl.href = url;
+  linkEl.download = nomeArquivo;
+  resultEl.classList.remove('hidden');
+}
 
-      // Forçar array para o Make
-      outputs.forEach(v=>data.append('outputs[]', v));
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  statusEl.textContent = '';
+  resultEl.classList.add('hidden');
 
-      // UX
-      btn.disabled = true;
-      btn.textContent = 'Gerando...';
-      statusEl.textContent = 'Processando. Pode levar alguns segundos dependendo do edital.';
+  const data = new FormData(form);
+  const outputs = Array.from(form.querySelectorAll('input[name="outputs"]:checked')).map(i=>i.value);
+  if(outputs.length===0){ statusEl.textContent='Selecione ao menos um formato.'; return; }
+  outputs.forEach(v=>data.append('outputs[]', v));
 
-      try{
-        const res = await fetch(WEBHOOK_URL, { method:'POST', body:data });
-        if(!res.ok){
-          const text = await res.text().catch(()=> '');
-          throw new Error('Falha no backend: ' + text);
-        }
-        const json = await res.json();
-        if(!json.downloadUrl){ throw new Error('downloadUrl ausente na resposta'); }
+  const editalURL = data.get('edital_url');
+  if(!validURL(editalURL)){ statusEl.textContent='Informe um link válido do edital.'; return; }
 
-        linkEl.href = json.downloadUrl;
-        resultEl.classList.remove('hidden');
-        statusEl.textContent = 'Pronto para baixar.';
-      }catch(err){
-        console.error(err);
-        statusEl.textContent = 'Erro ao gerar. Verifique o link do edital e tente novamente.';
-      }finally{
-        btn.disabled = false;
-        btn.textContent = 'Gerar XLSX';
-      }
-    });
-  </script>
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  statusEl.textContent = 'Processando…';
+
+  try{
+    const res = await fetch(WEBHOOK_URL, { method:'POST', body:data });
+    if(!res.ok) throw new Error(await res.text().catch(()=> 'Erro no backend'));
+    const json = await res.json();
+
+    // json deve ser o payload com ficha/ustuus/marcologico
+    const titulo = (data.get('title') || 'documento').trim().replace(/[^\w\-]+/g,'_');
+    baixarXLSX(json, `${titulo}_HumanaBrasil.xlsx`);
+    statusEl.textContent = 'Pronto para baixar.';
+  }catch(err){
+    console.error(err);
+    statusEl.textContent = 'Erro ao gerar. Revise o link do edital ou tente novamente.';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Gerar XLSX';
+  }
+});
+</script>
+
 </body>
 </html>
