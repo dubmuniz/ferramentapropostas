@@ -1,0 +1,48 @@
+<!doctype html><html lang="pt-br"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Humana Brasil — Gerador de Documentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/logo.svg"><link rel="stylesheet" href="style.css">
+</head><body>
+<header class="wrap">
+  <img src="assets/logo.svg" alt="Humana Brasil" class="logo">
+  <h1>Gerador de Ficha, Us to Us e Marco Lógico</h1>
+  <p>Escreva o projeto, anexe o edital, selecione os formatos, baixe o XLSX.</p>
+</header>
+
+<main class="wrap">
+  <form id="docForm">
+    <label>Título do projeto
+      <input name="title" required maxlength="140">
+    </label>
+    <label>Objetivo geral
+      <textarea name="objetivo_geral" required rows="3"></textarea>
+    </label>
+    <label>Objetivos específicos
+      <textarea name="objetivos_especificos" required rows="4"></textarea>
+    </label>
+
+    <fieldset>
+      <legend>Formatos de saída</legend>
+      <label><input type="checkbox" name="outputs" value="ficha" checked> Ficha de Identificação</label>
+      <label><input type="checkbox" name="outputs" value="ustuus"> Us to Us</label>
+      <label><input type="checkbox" name="outputs" value="marcologico"> Marco Lógico</label>
+    </fieldset>
+
+    <label>Anexar edital, PDF ou DOCX
+      <input type="file" name="edital" accept=".pdf,.doc,.docx" required>
+    </label>
+
+    <button type="submit" id="submitBtn">Gerar XLSX</button>
+    <p id="status" role="status" aria-live="polite"></p>
+  </form>
+
+  <div id="result" class="hidden">
+    <a id="downloadLink" class="btn" href="#" download>Baixar XLSX</a>
+  </div>
+</main>
+
+<footer class="wrap small">© Humana Povo para Povo Brasil</footer>
+<script src="script.js"></script>
+</body></html>
