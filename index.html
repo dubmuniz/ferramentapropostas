@@ -20,7 +20,7 @@
     p.lead{color:var(--muted);margin:0 0 10px}
     form{background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
     label{display:block;margin:12px 0;font-weight:600}
-    input,textarea,select{width:100%;margin-top:6px;border:1px solid #d8dee4;border-radius:8px;padding:10px;font:inherit}
+    input,textarea{width:100%;margin-top:6px;border:1px solid #d8dee4;border-radius:8px;padding:10px;font:inherit}
     input[type=url]{word-break:break-all}
     input[type=number]{width:100%}
     fieldset{border:1px solid #e3e8ee;border-radius:10px;padding:10px 12px;margin:14px 0}
@@ -28,25 +28,17 @@
     .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
     .checks label{display:flex;align-items:center;gap:8px;margin:4px 0;font-weight:500}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .row.full{grid-template-columns:1fr}
-    .row-3col{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    @media (max-width:720px){
-      .row{grid-template-columns:1fr}
-      .row-3col{grid-template-columns:1fr}
-    }
+    @media (max-width:720px){.row{grid-template-columns:1fr}}
     button{background:var(--hb-green);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;cursor:pointer;transition:all 0.2s}
     button:hover:not(:disabled){filter:brightness(1.05)}
     button:disabled{opacity:0.6;cursor:not-allowed}
     .btn{display:inline-block;background:var(--hb-accent);color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:12px}
-    .btn:hover{filter:brightness(0.95)}
     .hidden{display:none}
     .status{min-height:22px;color:var(--muted);margin:10px 0 0;font-size:14px}
     .status.error{color:#d32f2f}
     .status.success{color:var(--hb-green)}
     footer{color:#80888c;font-size:12px;text-align:center;padding:24px 0}
     .note{font-size:12px;color:#80888c;margin-top:6px}
-    .section-divider{margin:20px 0;padding:16px 0;border-top:1px solid #e3e8ee}
-    .input-group{display:grid;grid-template-columns:1fr;gap:8px}
   </style>
 </head>
 <body>
@@ -64,8 +56,6 @@
 
   <main class="wrap">
     <form id="docForm" novalidate>
-      
-      <!-- SEÇÃO 1: IDENTIFICAÇÃO DO PROJETO -->
       <fieldset>
         <legend>📋 Identificação do Projeto</legend>
         <div class="row">
@@ -74,37 +64,31 @@
           </label>
           <label>Link do edital *
             <input name="edital_url" type="url" required placeholder="https://exemplo.org/chamada.pdf">
-            <div class="note">Cole o link da chamada pública ou arquivo PDF</div>
           </label>
         </div>
         <div class="row">
           <label>Público-alvo
-            <input name="target_audience" placeholder="Ex: Agricultores familiares de pequeno porte">
+            <input name="target_audience" placeholder="Ex: Agricultores familiares">
           </label>
-          <label>Duração do Projeto (meses)
-            <input name="duration" type="number" min="1" max="60" value="12" placeholder="Ex: 12">
+          <label>Duração (meses)
+            <input name="duration" type="number" min="1" max="60" value="12">
           </label>
         </div>
       </fieldset>
 
-      <!-- SEÇÃO 2: OBJETIVOS E RESULTADOS -->
       <fieldset>
         <legend>🎯 Objetivos e Resultados</legend>
         <label>Objetivo geral *
-          <textarea name="obj_geral" required rows="3" placeholder="Defina a mudança central pretendida pelo projeto"></textarea>
+          <textarea name="obj_geral" required rows="3" placeholder="Defina a mudança central"></textarea>
         </label>
-
         <label>Objetivos específicos *
-          <textarea name="obj_espec" required rows="4" placeholder="Liste um objetivo por linha. Exemplo:&#10;- Aumentar acesso a tecnologias&#10;- Fortalecer organização comunitária&#10;- Melhorar renda mensal"></textarea>
+          <textarea name="obj_espec" required rows="4" placeholder="Liste um objetivo por linha"></textarea>
         </label>
-
-        <label>Número de Resultados Esperados
+        <label>Número de Resultados
           <input name="num_results" type="number" min="1" max="10" value="3">
-          <div class="note">Quantos resultados o projeto deve gerar?</div>
         </label>
       </fieldset>
 
-      <!-- SEÇÃO 3: FORMATOS DE SAÍDA -->
       <fieldset>
         <legend>📄 Formatos de Saída</legend>
         <div class="checks">
@@ -112,19 +96,16 @@
           <label><input type="checkbox" name="outputs" value="ustuus" checked> Us to Us</label>
           <label><input type="checkbox" name="outputs" value="marcologico" checked> Marco Lógico</label>
         </div>
-        <div class="note" style="margin-top:10px">Selecione quais formatos você deseja gerar</div>
       </fieldset>
 
-      <!-- SEÇÃO 4: AÇÃO -->
       <div style="text-align:center;margin-top:20px">
         <button type="submit" id="submitBtn">Gerar XLSX</button>
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </div>
 
-      <!-- RESULTADO -->
       <div id="result" class="hidden" style="margin-top:20px;text-align:center">
         <a id="downloadLink" class="btn" href="#" download>⬇️ Baixar XLSX</a>
-        <div class="note">O arquivo está pronto para download. Salve em seu computador.</div>
+        <div class="note">Arquivo pronto para download</div>
       </div>
     </form>
   </main>
@@ -133,7 +114,6 @@
 
  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
-// URL do webhook Make.com - JÁ CONFIGURADA
 const WEBHOOK_URL = 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd';
 
 const form = document.getElementById('docForm');
@@ -203,80 +183,68 @@ form.addEventListener('submit', async (e) => {
   const data = new FormData(form);
   const outputs = Array.from(form.querySelectorAll('input[name="outputs"]:checked')).map(i => i.value);
 
-  // Validações
   if (outputs.length === 0) {
-    statusEl.textContent = '⚠️ Selecione ao menos um formato de saída.';
+    statusEl.textContent = '⚠️ Selecione ao menos um formato.';
     statusEl.classList.add('error');
     return;
   }
 
   const editalURL = data.get('edital_url');
   if (!validURL(editalURL)) {
-    statusEl.textContent = '⚠️ Informe um link válido do edital (https://...).';
+    statusEl.textContent = '⚠️ Link do edital inválido.';
     statusEl.classList.add('error');
     return;
   }
 
-  outputs.forEach(v => data.append('outputs[]', v));
-
   btn.disabled = true;
   btn.textContent = 'Gerando...';
-  statusEl.textContent = '⏳ Enviando para Make.com...';
+  statusEl.textContent = '⏳ Processando...';
   statusEl.classList.add('success');
 
-  console.log('Enviando dados para:', WEBHOOK_URL);
-  console.log('Dados originais:', Object.fromEntries(data));
-
   try {
-    // Converter FormData para JSON
-    const jsonData = {};
-    for (const [key, value] of data) {
-      if (key !== 'outputs[]') {
-        // Escapar caracteres especiais nos valores
-        jsonData[key] = String(value).trim();
-      }
-    }
-    
-    // Adicionar outputs como array
-    jsonData.outputs = outputs; // outputs já é um array
-    
-    console.log('Dados em JSON:', jsonData);
-    
-    // Stringificar com cuidado
-    const bodyString = JSON.stringify(jsonData);
-    console.log('JSON body length:', bodyString.length);
+    // Preparar dados SIMPLES - sem escape complexo
+    const payload = {
+      title: data.get('title'),
+      obj_geral: data.get('obj_geral'),
+      obj_espec: data.get('obj_espec'),
+      target_audience: data.get('target_audience'),
+      duration: data.get('duration'),
+      num_results: data.get('num_results'),
+      edital_url: editalURL,
+      outputs: outputs
+    };
+
+    console.log('Enviando:', payload);
 
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: bodyString
+      body: JSON.stringify(payload)
     });
 
-    console.log('Status HTTP:', res.status);
+    console.log('Status:', res.status);
 
     if (!res.ok) {
-      const errorText = await res.text().catch(() => 'Erro desconhecido');
-      console.error('Erro da resposta:', errorText);
-      throw new Error(`Make.com error ${res.status}: ${errorText}`);
+      const errorText = await res.text().catch(() => 'Erro');
+      throw new Error(`Erro ${res.status}: ${errorText}`);
     }
 
     const json = await res.json();
-    console.log('Resposta recebida:', json);
+    console.log('Resposta:', json);
 
-    // Validar estrutura da resposta
     if (!json.ficha && !json.ustuus && !json.marcologico) {
-      throw new Error('Resposta inválida - estrutura não reconhecida');
+      throw new Error('Resposta inválida');
     }
 
     const titulo = (data.get('title') || 'documento').trim().replace(/[^\w\-]+/g, '_');
     baixarXLSX(json, `${titulo}_HumanaBrasil.xlsx`);
-    statusEl.textContent = '✅ Pronto para baixar!';
+    statusEl.textContent = '✅ Pronto!';
     statusEl.classList.add('success');
 
   } catch (err) {
-    console.error('Erro completo:', err);
+    console.error(err);
     statusEl.textContent = `❌ Erro: ${err.message}`;
     statusEl.classList.add('error');
   } finally {
