@@ -201,7 +201,7 @@ form.addEventListener('submit', async (e) => {
   resultEl.classList.add('hidden');
 
   // Validar se WEBHOOK_URL foi configurada
-  if (WEBHOOK_URL === 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd' || !WEBHOOK_URL) {
+  if (WEBHOOK_URL === 'COLOQUE_A_URL_DO_WEBHOOK_AQUI' || !WEBHOOK_URL) {
     statusEl.textContent = '❌ ERRO: Configure a URL do webhook no código!';
     statusEl.classList.add('error');
     console.error('WEBHOOK_URL não configurada!');
@@ -236,9 +236,16 @@ form.addEventListener('submit', async (e) => {
   console.log('Dados:', Object.fromEntries(data));
 
   try {
+    // Converter FormData para JSON
+    const jsonData = Object.fromEntries(data);
+    console.log('Dados em JSON:', jsonData);
+
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
-      body: data
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(jsonData)
     });
 
     console.log('Status:', res.status);
