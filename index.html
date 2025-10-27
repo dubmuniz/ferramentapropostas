@@ -20,27 +20,38 @@
     p.lead{color:var(--muted);margin:0 0 10px}
     form{background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
     label{display:block;margin:12px 0;font-weight:600}
-    input,textarea{width:100%;margin-top:6px;border:1px solid #d8dee4;border-radius:8px;padding:10px;font:inherit}
+    input,textarea,select{width:100%;margin-top:6px;border:1px solid #d8dee4;border-radius:8px;padding:10px;font:inherit}
     input[type=url]{word-break:break-all}
+    input[type=number]{width:100%}
     fieldset{border:1px solid #e3e8ee;border-radius:10px;padding:10px 12px;margin:14px 0}
-    legend{font-weight:600}
+    legend{font-weight:600;margin-bottom:8px}
     .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
     .checks label{display:flex;align-items:center;gap:8px;margin:4px 0;font-weight:500}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:720px){.row{grid-template-columns:1fr}}
-    button{background:var(--hb-green);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;cursor:pointer}
-    button:hover{filter:brightness(1.05)}
-    .btn{display:inline-block;background:var(--hb-accent);color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600}
+    .row.full{grid-template-columns:1fr}
+    .row-3col{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media (max-width:720px){
+      .row{grid-template-columns:1fr}
+      .row-3col{grid-template-columns:1fr}
+    }
+    button{background:var(--hb-green);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;cursor:pointer;transition:all 0.2s}
+    button:hover:not(:disabled){filter:brightness(1.05)}
+    button:disabled{opacity:0.6;cursor:not-allowed}
+    .btn{display:inline-block;background:var(--hb-accent);color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:12px}
+    .btn:hover{filter:brightness(0.95)}
     .hidden{display:none}
-    .status{min-height:22px;color:var(--muted);margin:10px 0 0}
+    .status{min-height:22px;color:var(--muted);margin:10px 0 0;font-size:14px}
+    .status.error{color:#d32f2f}
+    .status.success{color:var(--hb-green)}
     footer{color:#80888c;font-size:12px;text-align:center;padding:24px 0}
     .note{font-size:12px;color:#80888c;margin-top:6px}
+    .section-divider{margin:20px 0;padding:16px 0;border-top:1px solid #e3e8ee}
+    .input-group{display:grid;grid-template-columns:1fr;gap:8px}
   </style>
 </head>
 <body>
   <header class="wrap">
     <div class="brand">
-      <!-- SVG simples para manter arquivo único -->
       <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
         <circle cx="32" cy="32" r="30" fill="none" stroke="#1E7E34" stroke-width="4"/>
         <path d="M20 34c6-10 18-10 24 0M24 40c4-6 12-6 16 0" fill="none" stroke="#1E7E34" stroke-width="3" stroke-linecap="round"/>
@@ -48,48 +59,77 @@
       <strong>Humana Povo para Povo Brasil</strong>
     </div>
     <h1>Gerador de Ficha, Us to Us e Marco Lógico</h1>
-    <p class="lead">Descreva o projeto, cole o link do edital, escolha os formatos, baixe o XLSX.</p>
+    <p class="lead">Descreva seu projeto e gere automaticamente documentos estruturados em XLSX.</p>
   </header>
 
   <main class="wrap">
     <form id="docForm" novalidate>
-      <div class="row">
-        <label>Título do projeto
-          <input name="title" required maxlength="140" placeholder="Título curto">
-        </label>
-        <label>Link do edital
-          <input name="edital_url" type="url" required placeholder="https://exemplo.org/chamada.pdf ou página da chamada">
-        </label>
-      </div>
-
-      <label>Objetivo geral
-        <textarea name="obj_geral" required rows="3" placeholder="Defina a mudança central pretendida"></textarea>
-      </label>
-
-      <label>Objetivos específicos
-        <textarea name="obj_espec" required rows="4" placeholder="Liste um por linha"></textarea>
-      </label>
-
+      
+      <!-- SEÇÃO 1: IDENTIFICAÇÃO DO PROJETO -->
       <fieldset>
-        <legend>Formatos de saída</legend>
-        <div class="checks">
-          <label><input type="checkbox" name="outputs" value="ficha" checked> Ficha de Identificação</label>
-          <label><input type="checkbox" name="outputs" value="ustuus"> Us to Us</label>
-          <label><input type="checkbox" name="outputs" value="marcologico"> Marco Lógico</label>
+        <legend>📋 Identificação do Projeto</legend>
+        <div class="row">
+          <label>Título do projeto *
+            <input name="title" required maxlength="140" placeholder="Título curto e objetivo">
+          </label>
+          <label>Link do edital *
+            <input name="edital_url" type="url" required placeholder="https://exemplo.org/chamada.pdf">
+            <div class="note">Cole o link da chamada pública ou arquivo PDF</div>
+          </label>
+        </div>
+        <div class="row">
+          <label>Público-alvo
+            <input name="target_audience" placeholder="Ex: Agricultores familiares de pequeno porte">
+          </label>
+          <label>Duração do Projeto (meses)
+            <input name="duration" type="number" min="1" max="60" value="12" placeholder="Ex: 12">
+          </label>
         </div>
       </fieldset>
 
-      <button type="submit" id="submitBtn">Gerar XLSX</button>
-      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <!-- SEÇÃO 2: OBJETIVOS E RESULTADOS -->
+      <fieldset>
+        <legend>🎯 Objetivos e Resultados</legend>
+        <label>Objetivo geral *
+          <textarea name="obj_geral" required rows="3" placeholder="Defina a mudança central pretendida pelo projeto"></textarea>
+        </label>
 
-      <div id="result" class="hidden" style="margin-top:12px">
-        <a id="downloadLink" class="btn" href="#" download>Baixar XLSX</a>
-        <div class="note">O link expira conforme sua configuração no backend.</div>
+        <label>Objetivos específicos *
+          <textarea name="obj_espec" required rows="4" placeholder="Liste um objetivo por linha. Exemplo:&#10;- Aumentar acesso a tecnologias&#10;- Fortalecer organização comunitária&#10;- Melhorar renda mensal"></textarea>
+        </label>
+
+        <label>Número de Resultados Esperados
+          <input name="num_results" type="number" min="1" max="10" value="3">
+          <div class="note">Quantos resultados o projeto deve gerar?</div>
+        </label>
+      </fieldset>
+
+      <!-- SEÇÃO 3: FORMATOS DE SAÍDA -->
+      <fieldset>
+        <legend>📄 Formatos de Saída</legend>
+        <div class="checks">
+          <label><input type="checkbox" name="outputs" value="ficha" checked> Ficha de Identificação</label>
+          <label><input type="checkbox" name="outputs" value="ustuus" checked> Us to Us</label>
+          <label><input type="checkbox" name="outputs" value="marcologico" checked> Marco Lógico</label>
+        </div>
+        <div class="note" style="margin-top:10px">Selecione quais formatos você deseja gerar</div>
+      </fieldset>
+
+      <!-- SEÇÃO 4: AÇÃO -->
+      <div style="text-align:center;margin-top:20px">
+        <button type="submit" id="submitBtn">Gerar XLSX</button>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </div>
+
+      <!-- RESULTADO -->
+      <div id="result" class="hidden" style="margin-top:20px;text-align:center">
+        <a id="downloadLink" class="btn" href="#" download>⬇️ Baixar XLSX</a>
+        <div class="note">O arquivo está pronto para download. Salve em seu computador.</div>
       </div>
     </form>
   </main>
 
-  <footer>© Humana Povo para Povo Brasil</footer>
+  <footer>© Humana Povo para Povo Brasil | Protótipo em Desenvolvimento</footer>
 
  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
@@ -100,41 +140,51 @@ const resultEl = document.getElementById('result');
 const linkEl = document.getElementById('downloadLink');
 const btn = document.getElementById('submitBtn');
 
-function validURL(u){ try{ const x=new URL(u); return ['http:','https:'].includes(x.protocol) }catch{ return false } }
+function validURL(u) {
+  try {
+    const x = new URL(u);
+    return ['http:', 'https:'].includes(x.protocol);
+  } catch {
+    return false;
+  }
+}
 
-function aoaFromKeyRows(rows, headers){
-  // rows = array de objetos homogêneos; headers = array com ordem das colunas
+function aoaFromKeyRows(rows, headers) {
   const aoa = [headers];
-  for(const r of rows){ aoa.push(headers.map(h=> r[h] ?? '')); }
+  for (const r of rows) {
+    aoa.push(headers.map(h => r[h] ?? ''));
+  }
   return aoa;
 }
 
-function baixarXLSX(payload, nomeArquivo){
+function baixarXLSX(payload, nomeArquivo) {
   const wb = XLSX.utils.book_new();
 
-  if(payload.ficha?.enabled){
-    // Ficha: rows [{Campo,Conteúdo}]
-    const headers = ["Campo","Conteúdo"];
+  if (payload.ficha?.enabled) {
+    const headers = ["Campo", "Conteúdo"];
     const aoa = aoaFromKeyRows(payload.ficha.rows, headers);
     const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{wch: 25}, {wch: 50}];
     XLSX.utils.book_append_sheet(wb, ws, "Ficha");
   }
-  if(payload.ustuus?.enabled){
-    // UsToUs: rows [{Seção,Texto}]
-    const headers = ["Seção","Texto"];
+
+  if (payload.ustuus?.enabled) {
+    const headers = ["Seção", "Texto"];
     const aoa = aoaFromKeyRows(payload.ustuus.rows, headers);
     const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{wch: 20}, {wch: 55}];
     XLSX.utils.book_append_sheet(wb, ws, "UsToUs");
   }
-  if(payload.marcologico?.enabled){
-    // Marco Lógico: colunas fixas
-    const headers = ["Objetivo Geral","Objetivo Específico","Resultado","Indicador","Meta","Linha de base","Meio de Verificação","Atividades","Premissas/Riscos","Cronograma","Responsável"];
+
+  if (payload.marcologico?.enabled) {
+    const headers = ["Objetivo Geral", "Objetivo Específico", "Resultado", "Indicador", "Meta", "Linha de base", "Meio de Verificação", "Atividades", "Premissas/Riscos", "Cronograma", "Responsável"];
     const aoa = aoaFromKeyRows(payload.marcologico.rows, headers);
     const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = Array(11).fill({wch: 15});
     XLSX.utils.book_append_sheet(wb, ws, "MarcoLogico");
   }
 
-  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'array'});
   const blob = new Blob([wbout], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const url = URL.createObjectURL(blob);
   linkEl.href = url;
@@ -142,36 +192,69 @@ function baixarXLSX(payload, nomeArquivo){
   resultEl.classList.remove('hidden');
 }
 
-form.addEventListener('submit', async (e)=>{
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
   statusEl.textContent = '';
+  statusEl.className = 'status';
   resultEl.classList.add('hidden');
 
   const data = new FormData(form);
-  const outputs = Array.from(form.querySelectorAll('input[name="outputs"]:checked')).map(i=>i.value);
-  if(outputs.length===0){ statusEl.textContent='Selecione ao menos um formato.'; return; }
-  outputs.forEach(v=>data.append('outputs[]', v));
+  const outputs = Array.from(form.querySelectorAll('input[name="outputs"]:checked')).map(i => i.value);
+
+  // Validações
+  if (outputs.length === 0) {
+    statusEl.textContent = '⚠️ Selecione ao menos um formato de saída.';
+    statusEl.classList.add('error');
+    return;
+  }
 
   const editalURL = data.get('edital_url');
-  if(!validURL(editalURL)){ statusEl.textContent='Informe um link válido do edital.'; return; }
+  if (!validURL(editalURL)) {
+    statusEl.textContent = '⚠️ Informe um link válido do edital (https://...).';
+    statusEl.classList.add('error');
+    return;
+  }
 
-  btn.disabled = true; btn.textContent = 'Gerando...';
-  statusEl.textContent = 'Processando…';
+  outputs.forEach(v => data.append('outputs[]', v));
 
-  try{
-    const res = await fetch(WEBHOOK_URL, { method:'POST', body:data });
-    if(!res.ok) throw new Error(await res.text().catch(()=> 'Erro no backend'));
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+  statusEl.textContent = '⏳ Processando seu projeto...';
+  statusEl.classList.add('success');
+
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      body: data,
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => 'Erro desconhecido');
+      throw new Error(`Backend error ${res.status}: ${errorText}`);
+    }
+
     const json = await res.json();
 
-    // json deve ser o payload com ficha/ustuus/marcologico
-    const titulo = (data.get('title') || 'documento').trim().replace(/[^\w\-]+/g,'_');
+    // Validar estrutura da resposta
+    if (!json.ficha && !json.ustuus && !json.marcologico) {
+      throw new Error('Resposta inválida do servidor - estrutura não reconhecida');
+    }
+
+    const titulo = (data.get('title') || 'documento').trim().replace(/[^\w\-]+/g, '_');
     baixarXLSX(json, `${titulo}_HumanaBrasil.xlsx`);
-    statusEl.textContent = 'Pronto para baixar.';
-  }catch(err){
-    console.error(err);
-    statusEl.textContent = 'Erro ao gerar. Revise o link do edital ou tente novamente.';
-  }finally{
-    btn.disabled = false; btn.textContent = 'Gerar XLSX';
+    statusEl.textContent = '✅ Pronto para baixar!';
+    statusEl.classList.add('success');
+
+  } catch (err) {
+    console.error('Erro:', err);
+    statusEl.textContent = `❌ Erro ao gerar: ${err.message}`;
+    statusEl.classList.add('error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Gerar XLSX';
   }
 });
 </script>
