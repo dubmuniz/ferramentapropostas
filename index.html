@@ -133,7 +133,7 @@
 
  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
-// ⚠️ COPIE A URL DO WEBHOOK DO MAKE.COM E COLE AQUI:
+// URL do webhook Make.com - JÁ CONFIGURADA
 const WEBHOOK_URL = 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd';
 
 const form = document.getElementById('docForm');
@@ -200,14 +200,6 @@ form.addEventListener('submit', async (e) => {
   statusEl.className = 'status';
   resultEl.classList.add('hidden');
 
-  // Validar se WEBHOOK_URL foi configurada
-  if (WEBHOOK_URL === 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd' || !WEBHOOK_URL) {
-    statusEl.textContent = '❌ ERRO: Configure a URL do webhook no código!';
-    statusEl.classList.add('error');
-    console.error('WEBHOOK_URL não configurada!');
-    return;
-  }
-
   const data = new FormData(form);
   const outputs = Array.from(form.querySelectorAll('input[name="outputs"]:checked')).map(i => i.value);
 
@@ -233,7 +225,7 @@ form.addEventListener('submit', async (e) => {
   statusEl.classList.add('success');
 
   console.log('Enviando dados para:', WEBHOOK_URL);
-  console.log('Dados:', Object.fromEntries(data));
+  console.log('Dados originais:', Object.fromEntries(data));
 
   try {
     // Converter FormData para JSON
@@ -248,7 +240,7 @@ form.addEventListener('submit', async (e) => {
       body: JSON.stringify(jsonData)
     });
 
-    console.log('Status:', res.status);
+    console.log('Status HTTP:', res.status);
 
     if (!res.ok) {
       const errorText = await res.text().catch(() => 'Erro desconhecido');
