@@ -45,8 +45,6 @@
     .status.success{color:var(--hb-green)}
     footer{color:#80888c;font-size:12px;text-align:center;padding:24px 0}
     .note{font-size:12px;color:#80888c;margin-top:6px}
-    .section-divider{margin:20px 0;padding:16px 0;border-top:1px solid #e3e8ee}
-    .input-group{display:grid;grid-template-columns:1fr;gap:8px}
   </style>
 </head>
 <body>
@@ -217,7 +215,13 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  outputs.forEach(v => data.append('outputs[]', v));
+  // NÃO adicionar outputs[] ao FormData - vamos fazer manualmente
+  // Remover checkboxes do FormData
+  for (const [key] of data) {
+    if (key === 'outputs') {
+      data.delete(key);
+    }
+  }
 
   btn.disabled = true;
   btn.textContent = 'Gerando...';
@@ -225,28 +229,19 @@ form.addEventListener('submit', async (e) => {
   statusEl.classList.add('success');
 
   console.log('Enviando dados para:', WEBHOOK_URL);
-  console.log('Dados originais:', Object.fromEntries(data));
 
   try {
-    // Converter FormData para JSON (removendo outputs[] do FormData antes)
-    const entries = [];
-    for (const [key, value] of data) {
-      if (key !== 'outputs[]') {
-        entries.push([key, value]);
-      }
-    }
-    const jsonData = Object.fromEntries(entries);
-    
-    // Adicionar outputs como array
-    jsonData.outputs = outputs; // outputs já é um array
-    console.log('Dados em JSON:', jsonData);
+    // Adicionar outputs como múltiplos campos
+    outputs.forEach(output => {
+      data.append('outputs', output);
+    });
+
+    console.log('FormData:', Array.from(data.entries()));
 
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(jsonData)
+      body: data
+      // NÃO colocar Content-Type header - deixa o browser fazer
     });
 
     console.log('Status HTTP:', res.status);
