@@ -133,7 +133,9 @@
 
  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
-const WEBHOOK_URL = 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd';
+// ⚠️ COPIE A URL DO WEBHOOK DO MAKE.COM E COLE AQUI:
+const WEBHOOK_URL = 'COLOQUE_A_URL_DO_WEBHOOK_AQUI';
+
 const form = document.getElementById('docForm');
 const statusEl = document.getElementById('status');
 const resultEl = document.getElementById('result');
@@ -198,6 +200,14 @@ form.addEventListener('submit', async (e) => {
   statusEl.className = 'status';
   resultEl.classList.add('hidden');
 
+  // Validar se WEBHOOK_URL foi configurada
+  if (WEBHOOK_URL === 'COLOQUE_A_URL_DO_WEBHOOK_AQUI' || !WEBHOOK_URL) {
+    statusEl.textContent = '❌ ERRO: Configure a URL do webhook no código!';
+    statusEl.classList.add('error');
+    console.error('WEBHOOK_URL não configurada!');
+    return;
+  }
+
   const data = new FormData(form);
   const outputs = Array.from(form.querySelectorAll('input[name="outputs"]:checked')).map(i => i.value);
 
@@ -219,28 +229,32 @@ form.addEventListener('submit', async (e) => {
 
   btn.disabled = true;
   btn.textContent = 'Gerando...';
-  statusEl.textContent = '⏳ Processando seu projeto...';
+  statusEl.textContent = '⏳ Enviando para Make.com...';
   statusEl.classList.add('success');
+
+  console.log('Enviando dados para:', WEBHOOK_URL);
+  console.log('Dados:', Object.fromEntries(data));
 
   try {
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
-      body: data,
-      headers: {
-        'Accept': 'application/json'
-      }
+      body: data
     });
+
+    console.log('Status:', res.status);
 
     if (!res.ok) {
       const errorText = await res.text().catch(() => 'Erro desconhecido');
-      throw new Error(`Backend error ${res.status}: ${errorText}`);
+      console.error('Erro da resposta:', errorText);
+      throw new Error(`Make.com error ${res.status}: ${errorText}`);
     }
 
     const json = await res.json();
+    console.log('Resposta recebida:', json);
 
     // Validar estrutura da resposta
     if (!json.ficha && !json.ustuus && !json.marcologico) {
-      throw new Error('Resposta inválida do servidor - estrutura não reconhecida');
+      throw new Error('Resposta inválida - estrutura não reconhecida');
     }
 
     const titulo = (data.get('title') || 'documento').trim().replace(/[^\w\-]+/g, '_');
@@ -249,8 +263,8 @@ form.addEventListener('submit', async (e) => {
     statusEl.classList.add('success');
 
   } catch (err) {
-    console.error('Erro:', err);
-    statusEl.textContent = `❌ Erro ao gerar: ${err.message}`;
+    console.error('Erro completo:', err);
+    statusEl.textContent = `❌ Erro: ${err.message}`;
     statusEl.classList.add('error');
   } finally {
     btn.disabled = false;
