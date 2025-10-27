@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8">
-  <title>Humana Brasil — Gerador de Ficha, Us to Us e Marco Lógico</title>
+  <title>Gerador de Ficha de Identificação - Humana Brasil</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,33 +12,36 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    .wrap{max-width:900px;margin:0 auto;padding:20px}
+    .wrap{max-width:800px;margin:0 auto;padding:20px}
     header{text-align:center;padding-top:28px}
     .brand{display:inline-flex;align-items:center;gap:12px;justify-content:center}
     .logo{width:44px;height:44px}
     h1{margin:10px 0 6px;font-size:26px}
     p.lead{color:var(--muted);margin:0 0 10px}
     form{background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
-    label{display:block;margin:12px 0;font-weight:600}
-    input,textarea{width:100%;margin-top:6px;border:1px solid #d8dee4;border-radius:8px;padding:10px;font:inherit}
+    label{display:block;margin:16px 0 6px;font-weight:600;color:var(--ink)}
+    input,textarea{width:100%;margin-top:6px;border:1px solid #d8dee4;border-radius:8px;padding:12px;font:inherit;line-height:1.5}
+    textarea{resize:vertical;min-height:120px}
     input[type=url]{word-break:break-all}
-    input[type=number]{width:100%}
-    fieldset{border:1px solid #e3e8ee;border-radius:10px;padding:10px 12px;margin:14px 0}
-    legend{font-weight:600;margin-bottom:8px}
-    .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
-    .checks label{display:flex;align-items:center;gap:8px;margin:4px 0;font-weight:500}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:720px){.row{grid-template-columns:1fr}}
-    button{background:var(--hb-green);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;cursor:pointer;transition:all 0.2s}
+    button{background:var(--hb-green);color:#fff;border:0;border-radius:10px;padding:12px 24px;font-weight:600;cursor:pointer;transition:all 0.2s;font-size:16px;margin-top:20px;width:100%}
     button:hover:not(:disabled){filter:brightness(1.05)}
     button:disabled{opacity:0.6;cursor:not-allowed}
-    .btn{display:inline-block;background:var(--hb-accent);color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:12px}
+    .btn{display:inline-block;background:var(--hb-accent);color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:12px;text-align:center;width:100%}
+    .btn:hover{filter:brightness(0.95)}
     .hidden{display:none}
-    .status{min-height:22px;color:var(--muted);margin:10px 0 0;font-size:14px}
+    .status{min-height:22px;color:var(--muted);margin:16px 0 0;font-size:14px}
     .status.error{color:#d32f2f}
     .status.success{color:var(--hb-green)}
     footer{color:#80888c;font-size:12px;text-align:center;padding:24px 0}
     .note{font-size:12px;color:#80888c;margin-top:6px}
+    .section-title{font-size:18px;font-weight:600;margin-top:24px;margin-bottom:12px;color:var(--ink)}
+    .divider{height:1px;background:#e3e8ee;margin:20px 0}
+    .result-preview{background:#f5f5f5;border-left:4px solid var(--hb-green);padding:16px;border-radius:8px;margin-top:16px}
+    .result-preview h3{margin:0 0 12px;color:var(--hb-green)}
+    .result-row{display:grid;grid-template-columns:150px 1fr;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e8ee}
+    .result-row:last-child{border-bottom:none}
+    .result-label{font-weight:600;color:var(--ink)}
+    .result-value{color:var(--muted)}
   </style>
 </head>
 <body>
@@ -50,76 +53,57 @@
       </svg>
       <strong>Humana Povo para Povo Brasil</strong>
     </div>
-    <h1>Gerador de Ficha, Us to Us e Marco Lógico</h1>
-    <p class="lead">Descreva seu projeto e gere automaticamente documentos estruturados em XLSX.</p>
+    <h1>Gerador de Ficha de Identificação</h1>
+    <p class="lead">Preencha as informações do projeto e a IA irá gerar uma ficha completa e aprimorada.</p>
   </header>
 
   <main class="wrap">
-    <form id="docForm" novalidate>
-      <fieldset>
-        <legend>📋 Identificação do Projeto</legend>
-        <div class="row">
-          <label>Título do projeto *
-            <input name="title" required maxlength="140" placeholder="Título curto e objetivo">
-          </label>
-          <label>Link do edital *
-            <input name="edital_url" type="url" required placeholder="https://exemplo.org/chamada.pdf">
-          </label>
-        </div>
-        <div class="row">
-          <label>Público-alvo
-            <input name="target_audience" placeholder="Ex: Agricultores familiares">
-          </label>
-          <label>Duração (meses)
-            <input name="duration" type="number" min="1" max="60" value="12">
-          </label>
-        </div>
-      </fieldset>
+    <form id="fichForm" novalidate>
+      
+      <div class="section-title">📋 Informações do Projeto</div>
 
-      <fieldset>
-        <legend>🎯 Objetivos e Resultados</legend>
-        <label>Objetivo geral *
-          <textarea name="obj_geral" required rows="3" placeholder="Defina a mudança central"></textarea>
-        </label>
-        <label>Objetivos específicos *
-          <textarea name="obj_espec" required rows="4" placeholder="Liste um objetivo por linha"></textarea>
-        </label>
-        <label>Número de Resultados
-          <input name="num_results" type="number" min="1" max="10" value="3">
-        </label>
-      </fieldset>
+      <label>Nome do Projeto *
+        <input name="project_name" type="text" required placeholder="Ex: Futuros da Aprendizagem - Future of Learning RIP" maxlength="200">
+        <div class="note">Nome claro e objetivo do projeto</div>
+      </label>
 
-      <fieldset>
-        <legend>📄 Formatos de Saída</legend>
-        <div class="checks">
-          <label><input type="checkbox" name="outputs" value="ficha" checked> Ficha de Identificação</label>
-          <label><input type="checkbox" name="outputs" value="ustuus" checked> Us to Us</label>
-          <label><input type="checkbox" name="outputs" value="marcologico" checked> Marco Lógico</label>
-        </div>
-      </fieldset>
+      <label>Link da Proposta / Edital *
+        <input name="proposal_url" type="url" required placeholder="https://www.nationalgeographic.org/society/grants-and-investments/">
+        <div class="note">Link da chamada pública ou documento da proposta</div>
+      </label>
+
+      <label>Resumo Geral do Projeto *
+        <textarea name="project_summary" required placeholder="Descreva brevemente o que o projeto faz, seu objetivo principal, público-alvo e impacto esperado. A IA irá expandir e melhorar este texto."></textarea>
+        <div class="note">Resumo em suas palavras - pode ser informal, a IA vai corrigir e expandir</div>
+      </label>
+
+      <div class="divider"></div>
 
       <div style="text-align:center;margin-top:20px">
-        <button type="submit" id="submitBtn">Gerar XLSX</button>
+        <button type="submit" id="submitBtn">✨ Gerar Ficha</button>
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </div>
 
-      <div id="result" class="hidden" style="margin-top:20px;text-align:center">
-        <a id="downloadLink" class="btn" href="#" download>⬇️ Baixar XLSX</a>
-        <div class="note">Arquivo pronto para download</div>
+      <div id="result" class="hidden" style="margin-top:24px">
+        <div class="result-preview" id="preview"></div>
+        <a id="downloadLink" class="btn" href="#" download>⬇️ Baixar Ficha em XLSX</a>
+        <div class="note" style="margin-top:12px">O arquivo está pronto para download. Você pode abrir, editar e salvar no Excel.</div>
       </div>
+
     </form>
   </main>
 
-  <footer>© Humana Povo para Povo Brasil | Protótipo em Desenvolvimento</footer>
+  <footer>© Humana Povo para Povo Brasil | Gerador de Ficha de Identificação</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
   <script>
-    // ⚠️ COLOQUE SUA API KEY AQUI
-    const ANTHROPIC_API_KEY = 'sk-ant-COLOQUE_SUA_CHAVE_AQUI';
+    // URL do webhook Make.com (mesma do antes)
+    const WEBHOOK_URL = 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd';
 
-    const form = document.getElementById('docForm');
+    const form = document.getElementById('fichForm');
     const statusEl = document.getElementById('status');
     const resultEl = document.getElementById('result');
+    const previewEl = document.getElementById('preview');
     const linkEl = document.getElementById('downloadLink');
     const btn = document.getElementById('submitBtn');
 
@@ -132,74 +116,65 @@
       }
     }
 
-    function aoaFromKeyRows(rows, headers) {
-      const aoa = [headers];
-      for (const r of rows) {
-        aoa.push(headers.map(h => r[h] ?? ''));
-      }
-      return aoa;
-    }
-
-    function baixarXLSX(payload, nomeArquivo) {
+    function gerarXLSX(fichadata) {
       const wb = XLSX.utils.book_new();
+      
+      // Preparar dados para XLSX
+      const rows = [
+        ['Campo', 'Conteúdo'],
+        ['Título do Projeto', fichadata.titulo || ''],
+        ['Link da Proposta', fichadata.link_proposta || ''],
+        ['Resumo Executivo', fichadata.resumo_executivo || ''],
+        ['Entidade Responsável', fichadata.entidade || ''],
+        ['Site / Página da Chamada', fichadata.site_chamada || ''],
+        ['Objetivo e Escopo', fichadata.objetivo_escopo || ''],
+        ['Prazo Envio de Proposta', fichadata.prazo_envio || ''],
+        ['Prazo para Pedido de Esclarecimentos', fichadata.prazo_esclarecimentos || ''],
+        ['Área de Abrangência', fichadata.area_abrangencia || ''],
+        ['Prazo de Execução', fichadata.prazo_execucao || ''],
+        ['Limitações / Observações-Chave', fichadata.limitacoes || ''],
+        ['Valor (montante e contrapartida)', fichadata.valor || ''],
+        ['Tipo de Organização Elegível', fichadata.tipo_org || ''],
+        ['Data de Publicação do Edital', fichadata.data_publicacao || ''],
+        ['Como Submeter', fichadata.como_submeter || ''],
+        ['Documentação Obrigatória', fichadata.documentacao || ''],
+        ['Proposta Humana Brasil - Resumo', fichadata.proposta_resumo || ''],
+        ['Responsável pelo Preenchy', fichadata.responsavel || ''],
+        ['Data do Preenchimento', fichadata.data_preenchimento || '']
+      ];
 
-      if (payload.ficha?.enabled) {
-        const headers = ["Campo", "Conteúdo"];
-        const aoa = aoaFromKeyRows(payload.ficha.rows, headers);
-        const ws = XLSX.utils.aoa_to_sheet(aoa);
-        ws['!cols'] = [{wch: 25}, {wch: 50}];
-        XLSX.utils.book_append_sheet(wb, ws, "Ficha");
-      }
-
-      if (payload.ustuus?.enabled) {
-        const headers = ["Seção", "Texto"];
-        const aoa = aoaFromKeyRows(payload.ustuus.rows, headers);
-        const ws = XLSX.utils.aoa_to_sheet(aoa);
-        ws['!cols'] = [{wch: 20}, {wch: 55}];
-        XLSX.utils.book_append_sheet(wb, ws, "UsToUs");
-      }
-
-      if (payload.marcologico?.enabled) {
-        const headers = ["Objetivo Geral", "Objetivo Específico", "Resultado", "Indicador", "Meta", "Linha de base", "Meio de Verificação", "Atividades", "Premissas/Riscos", "Cronograma", "Responsável"];
-        const aoa = aoaFromKeyRows(payload.marcologico.rows, headers);
-        const ws = XLSX.utils.aoa_to_sheet(aoa);
-        ws['!cols'] = Array(11).fill({wch: 15});
-        XLSX.utils.book_append_sheet(wb, ws, "MarcoLogico");
-      }
-
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{wch: 35}, {wch: 80}];
+      
+      XLSX.utils.book_append_sheet(wb, ws, "Ficha");
+      
       const wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'array'});
       const blob = new Blob([wbout], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
       const url = URL.createObjectURL(blob);
       linkEl.href = url;
-      linkEl.download = nomeArquivo;
-      resultEl.classList.remove('hidden');
+      linkEl.download = `Ficha_${fichadata.titulo || 'projeto'}.xlsx`;
     }
 
-    async function chamarClaudeAPI(prompt) {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-api-key': ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20250929',
-          max_tokens: 3000,
-          messages: [{
-            role: 'user',
-            content: prompt
-          }]
-        })
-      });
+    function mostrarPreview(fichadata) {
+      let html = '<h3>📋 Ficha Gerada:</h3>';
+      
+      const campos = [
+        {key: 'titulo', label: 'Título do Projeto'},
+        {key: 'link_proposta', label: 'Link da Proposta'},
+        {key: 'resumo_executivo', label: 'Resumo Executivo'},
+        {key: 'objetivo_escopo', label: 'Objetivo e Escopo'},
+        {key: 'area_abrangencia', label: 'Área de Abrangência'},
+        {key: 'valor', label: 'Valor'}
+      ];
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Claude API error: ${error.error?.message || 'Unknown error'}`);
+      for (const campo of campos) {
+        if (fichadata[campo.key]) {
+          const valor = String(fichadata[campo.key]).substring(0, 150) + (String(fichadata[campo.key]).length > 150 ? '...' : '');
+          html += `<div class="result-row"><div class="result-label">${campo.label}</div><div class="result-value">${valor}</div></div>`;
+        }
       }
 
-      const data = await response.json();
-      return data.content[0].text;
+      previewEl.innerHTML = html;
     }
 
     form.addEventListener('submit', async (e) => {
@@ -209,94 +184,76 @@
       resultEl.classList.add('hidden');
 
       const data = new FormData(form);
-      const outputs = Array.from(form.querySelectorAll('input[name="outputs"]:checked')).map(i => i.value);
+      
+      const projectName = data.get('project_name');
+      const proposalUrl = data.get('proposal_url');
+      const projectSummary = data.get('project_summary');
 
-      if (outputs.length === 0) {
-        statusEl.textContent = '⚠️ Selecione ao menos um formato.';
-        statusEl.classList.add('error');
-        return;
-      }
-
-      const editalURL = data.get('edital_url');
-      if (!validURL(editalURL)) {
-        statusEl.textContent = '⚠️ Link do edital inválido.';
-        statusEl.classList.add('error');
-        return;
-      }
-
-      if (ANTHROPIC_API_KEY === 'sk-ant-COLOQUE_SUA_CHAVE_AQUI') {
-        statusEl.textContent = '❌ Configure sua API Key do Anthropic no código!';
+      if (!validURL(proposalUrl)) {
+        statusEl.textContent = '⚠️ URL da proposta inválida.';
         statusEl.classList.add('error');
         return;
       }
 
       btn.disabled = true;
       btn.textContent = 'Gerando...';
-      statusEl.textContent = '⏳ Chamando Claude...';
+      statusEl.textContent = '⏳ Enviando para processamento...';
       statusEl.classList.add('success');
 
       try {
-        const prompt = `You are a project planning expert. Generate a JSON with THREE document structures based on this project data:
+        console.log('Enviando dados:', {projectName, proposalUrl, projectSummary});
 
-Title: ${data.get('title')}
-General Objective: ${data.get('obj_geral')}
-Specific Objectives: ${data.get('obj_espec')}
-Target Audience: ${data.get('target_audience')}
-Duration: ${data.get('duration')} months
-Number of Results: ${data.get('num_results')}
+        // Enviar para Make.com
+        const payload = {
+          project_name: projectName,
+          proposal_url: proposalUrl,
+          project_summary: projectSummary,
+          type: 'ficha' // Indicar que é ficha
+        };
 
-Return ONLY valid JSON (no markdown, no code blocks, just JSON):
-{
-  "ficha": {
-    "enabled": true,
-    "rows": [
-      {"Campo": "Título", "Conteúdo": "${data.get('title')}"},
-      {"Campo": "Objetivo Geral", "Conteúdo": "${data.get('obj_geral')}"},
-      {"Campo": "Público-alvo", "Conteúdo": "${data.get('target_audience')}"},
-      {"Campo": "Duração", "Conteúdo": "${data.get('duration')} meses"}
-    ]
-  },
-  "ustuus": {
-    "enabled": true,
-    "rows": [
-      {"Seção": "Visão", "Texto": "Create vision"},
-      {"Seção": "Nossa História", "Texto": "Our story"},
-      {"Seção": "Nossa Mudança", "Texto": "Our change"}
-    ]
-  },
-  "marcologico": {
-    "enabled": true,
-    "rows": [
-      {"Objetivo Geral": "${data.get('obj_geral')}", "Objetivo Específico": "${data.get('obj_espec')}", "Resultado": "Result", "Indicador": "Indicator", "Meta": "Target", "Linha de base": "Baseline", "Meio de Verificação": "Verification", "Atividades": "Activities", "Premissas/Riscos": "Risks", "Cronograma": "Timeline", "Responsável": "Responsible"}
-    ]
-  }
-}`;
+        const res = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
 
-        const resposta = await chamarClaudeAPI(prompt);
-        console.log('Resposta Claude:', resposta);
+        console.log('Status:', res.status);
 
-        // Extrair JSON da resposta
-        let jsonResult;
-        try {
-          jsonResult = JSON.parse(resposta);
-        } catch (e) {
-          // Tenta extrair JSON de blocos de código
-          const jsonMatch = resposta.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            jsonResult = JSON.parse(jsonMatch[0]);
-          } else {
-            throw new Error('Não consegui extrair JSON válido da resposta');
-          }
+        if (!res.ok) {
+          const errorText = await res.text().catch(() => 'Erro desconhecido');
+          throw new Error(`Erro ${res.status}: ${errorText}`);
         }
 
-        if (!jsonResult.ficha && !jsonResult.ustuus && !jsonResult.marcologico) {
+        const responseData = await res.json();
+        console.log('Resposta:', responseData);
+
+        // Esperar resposta da IA com a ficha completa
+        if (responseData.FichadeIdentificacao) {
+          const fichadata = responseData.FichadeIdentificacao.rows ? 
+            Object.fromEntries(responseData.FichadeIdentificacao.rows.map(r => [r.Campo?.toLowerCase().replace(/\s+/g, '_'), r.Conteúdo])) :
+            responseData.FichadeIdentificacao;
+
+          mostrarPreview(fichadata);
+          gerarXLSX(fichadata);
+          resultEl.classList.remove('hidden');
+          statusEl.textContent = '✅ Ficha gerada com sucesso!';
+          statusEl.classList.add('success');
+        } else if (responseData.ficha) {
+          // Formato alternativo
+          const fichadata = responseData.ficha.rows ? 
+            Object.fromEntries(responseData.ficha.rows.map(r => [r.Campo?.toLowerCase().replace(/\s+/g, '_'), r.Conteúdo])) :
+            responseData.ficha;
+
+          mostrarPreview(fichadata);
+          gerarXLSX(fichadata);
+          resultEl.classList.remove('hidden');
+          statusEl.textContent = '✅ Ficha gerada com sucesso!';
+          statusEl.classList.add('success');
+        } else {
           throw new Error('Resposta inválida - estrutura não reconhecida');
         }
-
-        const titulo = (data.get('title') || 'documento').trim().replace(/[^\w\-]+/g, '_');
-        baixarXLSX(jsonResult, `${titulo}_HumanaBrasil.xlsx`);
-        statusEl.textContent = '✅ Pronto!';
-        statusEl.classList.add('success');
 
       } catch (err) {
         console.error(err);
@@ -304,7 +261,7 @@ Return ONLY valid JSON (no markdown, no code blocks, just JSON):
         statusEl.classList.add('error');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Gerar XLSX';
+        btn.textContent = '✨ Gerar Ficha';
       }
     });
   </script>
