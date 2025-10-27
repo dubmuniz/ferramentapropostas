@@ -201,7 +201,7 @@ form.addEventListener('submit', async (e) => {
   resultEl.classList.add('hidden');
 
   // Validar se WEBHOOK_URL foi configurada
-  if (WEBHOOK_URL === 'COLOQUE_A_URL_DO_WEBHOOK_AQUI' || !WEBHOOK_URL) {
+  if (WEBHOOK_URL === 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd' || !WEBHOOK_URL) {
     statusEl.textContent = '❌ ERRO: Configure a URL do webhook no código!';
     statusEl.classList.add('error');
     console.error('WEBHOOK_URL não configurada!');
