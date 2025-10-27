@@ -228,8 +228,16 @@ form.addEventListener('submit', async (e) => {
   console.log('Dados originais:', Object.fromEntries(data));
 
   try {
-    // Converter FormData para JSON
-    const jsonData = Object.fromEntries(data);
+    // Converter FormData para JSON (tratando arrays corretamente)
+    const jsonData = {};
+    for (const [key, value] of data) {
+      if (key === 'outputs[]') {
+        if (!jsonData.outputs) jsonData.outputs = [];
+        jsonData.outputs.push(value);
+      } else {
+        jsonData[key] = value;
+      }
+    }
     console.log('Dados em JSON:', jsonData);
 
     const res = await fetch(WEBHOOK_URL, {
