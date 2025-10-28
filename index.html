@@ -226,8 +226,19 @@
           throw new Error(`Erro ${res.status}: ${errorText}`);
         }
 
-        const responseData = await res.json();
-        console.log('Resposta:', responseData);
+        const responseText = await res.text();
+        console.log('Resposta bruta:', responseText);
+
+        // Remover markdown (```json ... ```)
+        let cleanJson = responseText
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
+          .trim();
+
+        console.log('JSON limpo:', cleanJson);
+        
+        const responseData = JSON.parse(cleanJson);
+        console.log('Resposta parseada:', responseData);
 
         // Esperar resposta da IA com a ficha completa
         if (responseData.FichadeIdentificacao) {
