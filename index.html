@@ -244,30 +244,29 @@
         console.log('Resposta parseada:', responseData);
 
         // Esperar resposta da IA com a ficha completa
-        if (responseData.FichadeIdentificacao) {
-          const fichadata = responseData.FichadeIdentificacao.rows ? 
-            Object.fromEntries(responseData.FichadeIdentificacao.rows.map(r => [r.Campo?.toLowerCase().replace(/\s+/g, '_'), r.Conteúdo])) :
-            responseData.FichadeIdentificacao;
-
-          mostrarPreview(fichadata);
-          gerarXLSX(fichadata);
-          resultEl.classList.remove('hidden');
-          statusEl.textContent = '✅ Ficha gerada com sucesso!';
-          statusEl.classList.add('success');
-        } else if (responseData.ficha) {
-          // Formato alternativo
-          const fichadata = responseData.ficha.rows ? 
-            Object.fromEntries(responseData.ficha.rows.map(r => [r.Campo?.toLowerCase().replace(/\s+/g, '_'), r.Conteúdo])) :
-            responseData.ficha;
-
-          mostrarPreview(fichadata);
-          gerarXLSX(fichadata);
-          resultEl.classList.remove('hidden');
-          statusEl.textContent = '✅ Ficha gerada com sucesso!';
-          statusEl.classList.add('success');
+        let fichadata = null;
+        
+        // Tentar encontrar a estrutura de rows
+        const rows = responseData?.ficha?.rows || responseData?.FichadeIdentificacao?.rows || [];
+        
+        if (rows && rows.length > 0) {
+          // Converter array de {Campo, Conteúdo} em objeto
+          fichadata = Object.fromEntries(rows.map(r => [r.Campo?.toLowerCase().replace(/\s+/g, '_'), r.Conteúdo]));
+        } else if (responseData?.ficha) {
+          fichadata = responseData.ficha;
+        } else if (responseData?.FichadeIdentificacao) {
+          fichadata = responseData.FichadeIdentificacao;
         } else {
-          throw new Error('Resposta inválida - estrutura não reconhecida');
+          throw new Error('Resposta inválida - estrutura não encontrada. Recebido: ' + JSON.stringify(responseData).substring(0, 100));
         }
+
+        console.log('Ficha data extraída:', fichadata);
+        
+        mostrarPreview(fichadata);
+        gerarXLSX(fichadata);
+        resultEl.classList.remove('hidden');
+        statusEl.textContent = '✅ Ficha gerada com sucesso!';
+        statusEl.classList.add('success');
 
       } catch (err) {
         console.error(err);
