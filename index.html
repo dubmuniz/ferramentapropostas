@@ -226,22 +226,31 @@
           throw new Error(`Erro ${res.status}: ${errorText}`);
         }
 
-        const responseText = await res.text();
-        console.log('Resposta bruta:', responseText);
-
-        // Remover markdown (```json ... ```)
-        let cleanJson = responseText
-          .replace(/```json\n?/g, '')
-          .replace(/```\n?/g, '')
-          .trim();
-
-        // Converter aspas simples para duplas (Claude pode retornar com aspas simples)
-        cleanJson = cleanJson.replace(/'/g, '"');
-
-        console.log('JSON limpo:', cleanJson);
+        let responseData;
         
-        const responseData = JSON.parse(cleanJson);
-        console.log('Resposta parseada:', responseData);
+        try {
+          // Tentar parsear como JSON direto (Webhook Response retorna JSON)
+          responseData = await res.json();
+          console.log('Resposta JSON:', responseData);
+        } catch (e) {
+          // Se falhar, tentar como texto e limpar
+          const responseText = await res.text();
+          console.log('Resposta bruta (texto):', responseText);
+
+          // Remover markdown (```json ... ```)
+          let cleanJson = responseText
+            .replace(/```json\n?/g, '')
+            .replace(/```\n?/g, '')
+            .trim();
+
+          // Converter aspas simples para duplas (Claude pode retornar com aspas simples)
+          cleanJson = cleanJson.replace(/'/g, '"');
+
+          console.log('JSON limpo:', cleanJson);
+          
+          responseData = JSON.parse(cleanJson);
+          console.log('Resposta parseada:', responseData);
+        }
 
         // Esperar resposta da IA com a ficha completa
         let fichadata = null;
