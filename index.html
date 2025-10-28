@@ -203,11 +203,16 @@
       try {
         console.log('Enviando dados:', {projectName, proposalUrl, projectSummary});
 
+        // Sanitizar inputs - remover quebras de linha que causam problemas no Make.com
+        const sanitizedName = projectName.replace(/[\n\r\t]/g, ' ').trim();
+        const sanitizedUrl = proposalUrl.replace(/[\n\r\t]/g, ' ').trim();
+        const sanitizedSummary = projectSummary.replace(/[\n\r\t]/g, ' ').trim();
+
         // Enviar para Make.com
         const payload = {
-          project_name: projectName,
-          proposal_url: proposalUrl,
-          project_summary: projectSummary,
+          project_name: sanitizedName,
+          proposal_url: sanitizedUrl,
+          project_summary: sanitizedSummary,
           type: 'ficha' // Indicar que é ficha
         };
 
