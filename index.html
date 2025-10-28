@@ -7,6 +7,8 @@
   <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.min.js"></script>
   <style>
     :root{--hb-green:#1E7E34;--hb-accent:#FFC857;--ink:#1b1b1b;--bg:#fafafa;--muted:#667085}
     *{box-sizing:border-box}
@@ -72,6 +74,11 @@
         <div class="note">Link da chamada pública ou documento da proposta</div>
       </label>
 
+      <label>Arquivo da Proposta (PDF, DOCX ou TXT) - Opcional
+        <input type="file" id="editorialFile" accept=".pdf,.docx,.doc,.txt" />
+        <div class="note">Se o link não funcionar, envie o arquivo diretamente. Máximo 5MB.</div>
+      </label>
+
       <label>Resumo Geral do Projeto *
         <textarea name="project_summary" required placeholder="Descreva brevemente o que o projeto faz, seu objetivo principal, público-alvo e impacto esperado. A IA irá expandir e melhorar este texto."></textarea>
         <div class="note">Resumo em suas palavras - pode ser informal, a IA vai corrigir e expandir</div>
@@ -98,7 +105,42 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
     // URL do webhook Make.com (mesma do antes)
-    const WEBHOOK_URL = 'https://hook.us2.make.com/je5qxm1aw515cjz6qm49dsbeesq73zci';
+    const WEBHOOK_URL = 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd';
+
+    // 🔑 Função para extrair texto de arquivo
+    async function extractTextFromFile(file) {
+      try {
+        statusEl.textContent = '⏳ Processando arquivo...';
+        console.log('📄 Processando arquivo:', file.name, file.type);
+        
+        if (file.type === 'text/plain') {
+          // TXT
+          const text = await file.text();
+          return text.substring(0, 8000);
+        } else if (file.type === 'application/pdf') {
+          // PDF
+          const arrayBuffer = await file.arrayBuffer();
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+          let text = '';
+          for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            text += textContent.items.map(item => item.str).join(' ') + ' ';
+          }
+          return text.trim().substring(0, 8000);
+        } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                   file.type === 'application/msword') {
+          // DOCX / DOC
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({arrayBuffer});
+          return result.value.trim().substring(0, 8000);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao processar arquivo:', error);
+        return '';
+      }
+    }
 
     const form = document.getElementById('fichForm');
     const statusEl = document.getElementById('status');
@@ -208,52 +250,51 @@
         const sanitizedUrl = proposalUrl.replace(/[\n\r\t]/g, ' ').trim();
         const sanitizedSummary = projectSummary.replace(/[\n\r\t]/g, ' ').trim();
 
-        // 🔑 NOVO: Buscar e extrair dados da URL
-        statusEl.textContent = '⏳ Extraindo dados da página...';
+        // 🔑 NOVO: Extrair dados (arquivo ou URL)
+        statusEl.textContent = '⏳ Preparando conteúdo...';
         let extractedText = '';
-        
-        try {
-          console.log('🔍 Tentando buscar URL:', sanitizedUrl);
-          
-          const urlResponse = await fetch(sanitizedUrl, {
-            method: 'GET',
-            headers: {
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-            },
-            mode: 'no-cors'  // Tenta buscar mesmo com CORS
-          });
-          
-          console.log('📊 Status da resposta:', urlResponse.status, urlResponse.statusText);
-          
-          if (urlResponse.ok || urlResponse.status === 0) {  // status 0 é comum com no-cors
-            const html = await urlResponse.text();
-            console.log('✅ HTML recebido, tamanho:', html.length);
+
+        // Verificar se arquivo foi enviado
+        const fileInput = document.getElementById('editorialFile');
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+          console.log('📎 Arquivo selecionado, extraindo...');
+          extractedText = await extractTextFromFile(fileInput.files[0]);
+          console.log('✅ Arquivo processado, tamanho:', extractedText.length);
+        } else {
+          // Se não tem arquivo, tenta buscar URL
+          try {
+            console.log('🔍 Tentando buscar URL:', sanitizedUrl);
+            const urlResponse = await fetch(sanitizedUrl, {
+              method: 'GET',
+              headers: {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+              },
+              mode: 'no-cors'
+            });
             
-            if (html && html.length > 100) {
-              // Extrair texto limpo do HTML
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(html, 'text/html');
+            console.log('📊 Status da resposta:', urlResponse.status, urlResponse.statusText);
+            
+            if (urlResponse.ok || urlResponse.status === 0) {
+              const html = await urlResponse.text();
+              console.log('✅ HTML recebido, tamanho:', html.length);
               
-              // Remover scripts, styles e outros elementos
-              doc.querySelectorAll('script, style, noscript, meta, link').forEach(el => el.remove());
-              
-              // Pegar texto e limpar
-              extractedText = doc.body.innerText
-                .replace(/\n+/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim()
-                .substring(0, 8000);
+              if (html && html.length > 100) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                doc.querySelectorAll('script, style, noscript, meta, link').forEach(el => el.remove());
                 
-              console.log('✅ Texto extraído com sucesso, tamanho:', extractedText.length);
-            } else {
-              console.warn('⚠️ HTML vazio ou muito pequeno');
+                extractedText = doc.body.innerText
+                  .replace(/\n+/g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim()
+                  .substring(0, 8000);
+                  
+                console.log('✅ Texto extraído da URL:', extractedText.length);
+              }
             }
-          } else {
-            console.warn('⚠️ Resposta não OK:', urlResponse.status);
+          } catch (error) {
+            console.error('❌ Erro ao buscar URL:', error.message);
           }
-        } catch (error) {
-          console.error('❌ Erro ao buscar URL:', error.message);
-          console.warn('ℹ️ Continuando sem conteúdo extraído. Use um resumo detalhado!');
         }
         
         console.log('📤 Enviando payload com extracted_text tamanho:', extractedText.length);
