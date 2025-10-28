@@ -104,7 +104,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
-    // URL do webhook Make.com (mesma do antes)
+    // URL do webhook Make.com
     const WEBHOOK_URL = 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd';
 
     // 🔑 Função para extrair texto de arquivo
@@ -161,114 +161,71 @@
     function gerarXLSX(fichadata) {
       const wb = XLSX.utils.book_new();
       
-      // Preparar dados para XLSX
-      const rows = [
-        ['Campo', 'Conteúdo'],
-        ['Título do Projeto', fichadata.titulo || ''],
-        ['Link da Proposta', fichadata.link_proposta || ''],
-        ['Resumo Executivo', fichadata.resumo_executivo || ''],
-        ['Entidade Responsável', fichadata.entidade || ''],
-        ['Site / Página da Chamada', fichadata.site_chamada || ''],
-        ['Objetivo e Escopo', fichadata.objetivo_escopo || ''],
-        ['Prazo Envio de Proposta', fichadata.prazo_envio || ''],
-        ['Prazo para Pedido de Esclarecimentos', fichadata.prazo_esclarecimentos || ''],
-        ['Área de Abrangência', fichadata.area_abrangencia || ''],
-        ['Prazo de Execução', fichadata.prazo_execucao || ''],
-        ['Limitações / Observações-Chave', fichadata.limitacoes || ''],
-        ['Valor (montante e contrapartida)', fichadata.valor || ''],
-        ['Tipo de Organização Elegível', fichadata.tipo_org || ''],
-        ['Data de Publicação do Edital', fichadata.data_publicacao || ''],
-        ['Como Submeter', fichadata.como_submeter || ''],
-        ['Documentação Obrigatória', fichadata.documentacao || ''],
-        ['Proposta Humana Brasil - Resumo', fichadata.proposta_resumo || ''],
-        ['Responsável pelo Preenchy', fichadata.responsavel || ''],
-        ['Data do Preenchimento', fichadata.data_preenchimento || '']
-      ];
-
+      // Preparar dados para XLSX - converter objeto em array de arrays
+      const rows = [['Campo', 'Conteúdo']];
+      
+      for (const [key, value] of Object.entries(fichadata)) {
+        rows.push([key.replace(/_/g, ' '), String(value || '')]);
+      }
+      
       const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [{wch: 35}, {wch: 80}];
+      ws['!cols'] = [{wch: 25}, {wch: 50}];
+      XLSX.utils.book_append_sheet(wb, ws, 'Ficha');
       
-      XLSX.utils.book_append_sheet(wb, ws, "Ficha");
+      const fileName = `Ficha-Identificacao-${Date.now()}.xlsx`;
+      XLSX.writeFile(wb, fileName);
       
-      const wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'array'});
-      const blob = new Blob([wbout], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-      const url = URL.createObjectURL(blob);
-      linkEl.href = url;
-      linkEl.download = `Ficha_${fichadata.titulo || 'projeto'}.xlsx`;
+      console.log('✅ XLSX gerado:', fileName);
     }
 
     function mostrarPreview(fichadata) {
-      let html = '<h3>📋 Ficha Gerada:</h3>';
-      
-      const campos = [
-        {key: 'titulo', label: 'Título do Projeto'},
-        {key: 'link_proposta', label: 'Link da Proposta'},
-        {key: 'resumo_executivo', label: 'Resumo Executivo'},
-        {key: 'objetivo_escopo', label: 'Objetivo e Escopo'},
-        {key: 'area_abrangencia', label: 'Área de Abrangência'},
-        {key: 'valor', label: 'Valor'}
-      ];
-
-      for (const campo of campos) {
-        if (fichadata[campo.key]) {
-          const valor = String(fichadata[campo.key]).substring(0, 150) + (String(fichadata[campo.key]).length > 150 ? '...' : '');
-          html += `<div class="result-row"><div class="result-label">${campo.label}</div><div class="result-value">${valor}</div></div>`;
-        }
+      let html = '<h3>📋 Prévia da Ficha Gerada</h3>';
+      for (const [key, value] of Object.entries(fichadata)) {
+        const label = key.replace(/_/g, ' ').toUpperCase();
+        const val = String(value || '').substring(0, 200);
+        html += `<div class="result-row"><div class="result-label">${label}</div><div class="result-value">${val}</div></div>`;
       }
-
       previewEl.innerHTML = html;
     }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      statusEl.textContent = '';
-      statusEl.className = 'status';
-      resultEl.classList.add('hidden');
-
-      const data = new FormData(form);
       
-      const projectName = data.get('project_name');
-      const proposalUrl = data.get('proposal_url');
-      const projectSummary = data.get('project_summary');
-
-      if (!validURL(proposalUrl)) {
-        statusEl.textContent = '⚠️ URL da proposta inválida.';
-        statusEl.classList.add('error');
-        return;
-      }
-
       btn.disabled = true;
-      btn.textContent = 'Gerando...';
-      statusEl.textContent = '⏳ Enviando para processamento...';
-      statusEl.classList.add('success');
+      btn.textContent = '⏳ Gerando...';
+      statusEl.textContent = '';
+      statusEl.classList.remove('error', 'success');
+      resultEl.classList.add('hidden');
+      previewEl.innerHTML = '';
 
       try {
-        console.log('Enviando dados:', {projectName, proposalUrl, projectSummary});
+        // 1️⃣ Validar e sanitizar dados do formulário
+        const projectName = form.project_name.value.trim();
+        const proposalUrl = form.proposal_url.value.trim();
+        const projectSummary = form.project_summary.value.trim();
+        
+        if (!projectName || !proposalUrl || !projectSummary) {
+          throw new Error('Por favor, preencha todos os campos obrigatórios (*');
+        }
 
-        // Sanitizar inputs
-        const sanitizedName = projectName.replace(/[\n\r\t]/g, ' ').trim();
-        const sanitizedUrl = proposalUrl.replace(/[\n\r\t]/g, ' ').trim();
-        const sanitizedSummary = projectSummary.replace(/[\n\r\t]/g, ' ').trim();
+        if (!validURL(proposalUrl)) {
+          throw new Error('URL da proposta inválida');
+        }
 
-        // 🔑 NOVO: Extrair dados (arquivo ou URL)
-        statusEl.textContent = '⏳ Preparando conteúdo...';
+        statusEl.textContent = '📤 Enviando dados...';
+
+        // 2️⃣ Processar arquivo se houver
         let extractedText = '';
-
-        // Verificar se arquivo foi enviado
         const fileInput = document.getElementById('editorialFile');
-        if (fileInput && fileInput.files && fileInput.files.length > 0) {
-          console.log('📎 Arquivo selecionado:', fileInput.files[0].name);
-          extractedText = await extractTextFromFile(fileInput.files[0]);
-          console.log('✅ Arquivo processado');
-          console.log('   - Tamanho:', extractedText.length, 'caracteres');
-          console.log('   - Preview:', extractedText.substring(0, 150) + '...');
-          console.log('   - Tipo:', typeof extractedText);
-          console.log('   - É string vazia?', extractedText === '');
-          console.log('   - É null?', extractedText === null);
-          console.log('   - É undefined?', extractedText === undefined);
+        
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          extractedText = await extractTextFromFile(file);
+          console.log('✅ Texto extraído do arquivo:', extractedText.length);
         } else {
           console.log('❌ Nenhum arquivo selecionado, tentando URL...');
-            const urlResponse = await fetch(sanitizedUrl, {
+          try {
+            const urlResponse = await fetch(proposalUrl, {
               method: 'GET',
               headers: {
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
@@ -276,7 +233,7 @@
               mode: 'no-cors'
             });
             
-            console.log('📊 Status da resposta:', urlResponse.status, urlResponse.statusText);
+            console.log('📊 Status da resposta:', urlResponse.status);
             
             if (urlResponse.ok || urlResponse.status === 0) {
               const html = await urlResponse.text();
@@ -298,31 +255,35 @@
             }
           } catch (error) {
             console.error('❌ Erro ao buscar URL:', error.message);
+            extractedText = '';
           }
         }
         
-        console.log('🔹 ANTES DE ENVIAR:');
-        console.log('   - extracted_text tamanho:', extractedText.length);
-        console.log('   - extracted_text tipo:', typeof extractedText);
-        console.log('   - extracted_text vazio?', extractedText.length === 0);
-        console.log('   - extracted_text preview:', extracted_text.substring(0, 100));
-        console.log('   - project_name:', sanitizedName.substring(0, 50));
-        console.log('   - proposal_url:', sanitizedUrl);
-        console.log('   - project_summary:', sanitizedSummary.substring(0, 50));
-        console.log('   - extracted_text tamanho:', extractedText.length);
-        console.log('   - extracted_text preview:', extractedText.substring(0, 100));
+        // Se ainda não tem texto extraído, usa o resumo
+        if (!extractedText || extractedText.length === 0) {
+          extractedText = projectSummary;
+        }
 
-        // Enviar para Make.com com texto extraído
+        // 3️⃣ Preparar payload com validações
         const payload = {
-          project_name: sanitizedName,
-          proposal_url: sanitizedUrl,
-          project_summary: sanitizedSummary,
+          project_name: projectName,
+          proposal_url: proposalUrl,
+          project_summary: projectSummary,
           extracted_text: extractedText,
           type: 'ficha'
         };
 
-        console.log('🔹 Payload JSON:', JSON.stringify(payload).substring(0, 200));
+        console.log('🔹 Payload preparado:', {
+          project_name: payload.project_name.substring(0, 50),
+          proposal_url: payload.proposal_url,
+          project_summary: payload.project_summary.substring(0, 50),
+          extracted_text_length: payload.extracted_text.length,
+          type: payload.type
+        });
 
+        // 4️⃣ Enviar para Make.com
+        statusEl.textContent = '🚀 Processando com IA...';
+        
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: {
@@ -331,100 +292,77 @@
           body: JSON.stringify(payload)
         });
         
-        console.log('✅ Payload enviado para:', WEBHOOK_URL);
-
-        console.log('Status:', res.status);
+        console.log('✅ Enviado para Make. Status:', res.status);
 
         if (!res.ok) {
           const errorText = await res.text().catch(() => 'Erro desconhecido');
           throw new Error(`Erro ${res.status}: ${errorText}`);
         }
 
-        let responseData;
+        // 5️⃣ Processar resposta
         let responseText = await res.text();
-        console.log('Resposta bruta (primeiros 500 chars):', responseText.substring(0, 500));
+        console.log('📥 Resposta recebida (primeiros 300 chars):', responseText.substring(0, 300));
+        
+        let responseData;
         
         try {
-          // ESTRATÉGIA 1: Limpar markdown e caracteres problemáticos
+          // Tentar parsear direto
+          responseData = JSON.parse(responseText);
+          console.log('✅ JSON parseado com sucesso');
+        } catch (parseError) {
+          console.log('⚠️ Tentando limpar JSON...');
+          
+          // Limpar markdown e caracteres inválidos
           let cleanJson = responseText
             .replace(/```json\n?/g, '')
             .replace(/```\n?/g, '')
+            .replace(/[\r\n\t]/g, ' ')
             .trim();
-
-          // ESTRATÉGIA 2: Remover quebras de linha DENTRO de strings
-          // Mas manter estrutura JSON
-          cleanJson = cleanJson.replace(/\n(?=(?:[^"]*"[^"]*")*[^"]*$)/g, ' ');
           
-          // ESTRATÉGIA 3: Escape de caracteres especiais
-          cleanJson = cleanJson.replace(/[\r\n\t]/g, ' ');
-          
-          console.log('JSON após limpeza (primeiros 500 chars):', cleanJson.substring(0, 500));
-          
-          // ESTRATÉGIA 4: Validar e parsear
-          responseData = JSON.parse(cleanJson);
-          console.log('✅ JSON parseado com sucesso');
-          
-        } catch (parseError) {
-          console.error('❌ Erro ao parsear JSON:', parseError.message);
-          console.error('Posição:', parseError.message);
-          
-          // ESTRATÉGIA 5: Tentar extrair JSON válido
-          console.log('Tentando recuperar JSON...');
-          
-          const jsonMatches = responseText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
-          if (jsonMatches && jsonMatches[0]) {
-            try {
-              let recoveredJson = jsonMatches[0]
-                .replace(/[\r\n\t]/g, ' ')
-                .replace(/\n/g, ' ');
-              responseData = JSON.parse(recoveredJson);
-              console.log('✅ JSON recuperado parcialmente');
-            } catch (e2) {
-              // ESTRATÉGIA 6: Criar JSON mínimo viável com dados do formulário
-              console.log('Criando JSON fallback com dados do formulário...');
-              responseData = {
-                ficha: {
-                  rows: [
-                    { Campo: "Título do Projeto", Conteúdo: projectName },
-                    { Campo: "Link da Proposta", Conteúdo: proposalUrl },
-                    { Campo: "Proposta Humana Brasil - Resumo", Conteúdo: projectSummary }
-                  ]
-                }
-              };
-              console.log('✅ JSON fallback criado');
-            }
-          } else {
-            throw new Error(`Erro ao processar resposta: ${parseError.message}. Formato inválido.`);
+          try {
+            responseData = JSON.parse(cleanJson);
+            console.log('✅ JSON parseado após limpeza');
+          } catch (e2) {
+            console.error('❌ Erro ao parsear JSON limpo:', e2.message);
+            throw new Error('Resposta da IA em formato inválido');
           }
         }
 
-        // Esperar resposta da IA com a ficha completa
+        // 6️⃣ Extrair dados da ficha
         let fichadata = null;
         
-        // Tentar encontrar a estrutura de rows
-        const rows = responseData?.ficha?.rows || responseData?.FichadeIdentificacao?.rows || [];
-        
-        if (rows && rows.length > 0) {
-          // Converter array de {Campo, Conteúdo} em objeto
-          fichadata = Object.fromEntries(rows.map(r => [r.Campo?.toLowerCase().replace(/\s+/g, '_'), r.Conteúdo]));
+        if (responseData?.ficha?.rows) {
+          // Se vem com array de rows
+          fichadata = Object.fromEntries(
+            responseData.ficha.rows.map(r => [
+              String(r.Campo || '').toLowerCase().replace(/\s+/g, '_'),
+              r.Conteúdo || ''
+            ])
+          );
         } else if (responseData?.ficha) {
           fichadata = responseData.ficha;
         } else if (responseData?.FichadeIdentificacao) {
           fichadata = responseData.FichadeIdentificacao;
-        } else {
-          throw new Error('Resposta inválida - estrutura não encontrada. Recebido: ' + JSON.stringify(responseData).substring(0, 100));
+        } else if (typeof responseData === 'object' && Object.keys(responseData).length > 0) {
+          // Se a resposta toda é a ficha
+          fichadata = responseData;
         }
 
-        console.log('Ficha data extraída:', fichadata);
+        if (!fichadata || typeof fichadata !== 'object' || Object.keys(fichadata).length === 0) {
+          throw new Error('Nenhum dado de ficha encontrado na resposta');
+        }
+
+        console.log('✅ Ficha extraída com', Object.keys(fichadata).length, 'campos');
         
-        mostrarPreview(fichadata);
+        // 7️⃣ Gerar XLSX e mostrar resultado
         gerarXLSX(fichadata);
+        mostrarPreview(fichadata);
         resultEl.classList.remove('hidden');
         statusEl.textContent = '✅ Ficha gerada com sucesso!';
         statusEl.classList.add('success');
 
       } catch (err) {
-        console.error(err);
+        console.error('❌ ERRO:', err);
         statusEl.textContent = `❌ Erro: ${err.message}`;
         statusEl.classList.add('error');
       } finally {
