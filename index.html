@@ -203,17 +203,48 @@
       try {
         console.log('Enviando dados:', {projectName, proposalUrl, projectSummary});
 
-        // Sanitizar inputs - remover quebras de linha que causam problemas no Make.com
+        // Sanitizar inputs
         const sanitizedName = projectName.replace(/[\n\r\t]/g, ' ').trim();
         const sanitizedUrl = proposalUrl.replace(/[\n\r\t]/g, ' ').trim();
         const sanitizedSummary = projectSummary.replace(/[\n\r\t]/g, ' ').trim();
 
-        // Enviar para Make.com
+        // 🔑 NOVO: Buscar e extrair dados da URL
+        statusEl.textContent = '⏳ Extraindo dados da página...';
+        let extractedText = '';
+        
+        try {
+          console.log('Buscando URL:', sanitizedUrl);
+          const urlResponse = await fetch(sanitizedUrl);
+          if (urlResponse.ok) {
+            const html = await urlResponse.text();
+            
+            // Extrair texto limpo do HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Remover scripts, styles e outros elementos
+            doc.querySelectorAll('script, style, noscript, meta, link').forEach(el => el.remove());
+            
+            // Pegar texto e limpar
+            extractedText = doc.body.innerText
+              .replace(/\n+/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .substring(0, 8000);
+              
+            console.log('✅ Texto extraído, tamanho:', extractedText.length);
+          }
+        } catch (error) {
+          console.warn('⚠️ Não consegui acessar a URL:', error);
+        }
+
+        // Enviar para Make.com com texto extraído
         const payload = {
           project_name: sanitizedName,
           proposal_url: sanitizedUrl,
           project_summary: sanitizedSummary,
-          type: 'ficha' // Indicar que é ficha
+          extracted_text: extractedText,
+          type: 'ficha'
         };
 
         const res = await fetch(WEBHOOK_URL, {
