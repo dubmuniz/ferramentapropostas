@@ -235,6 +235,9 @@
           .replace(/```\n?/g, '')
           .trim();
 
+        // Converter aspas simples para duplas (Claude pode retornar com aspas simples)
+        cleanJson = cleanJson.replace(/'/g, '"');
+
         console.log('JSON limpo:', cleanJson);
         
         const responseData = JSON.parse(cleanJson);
