@@ -98,7 +98,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
     // URL do webhook Make.com (mesma do antes)
-    const WEBHOOK_URL = 'https://hook.us2.make.com/je5qxm1aw515cjz6qm49dsbeesq73zci';
+    const WEBHOOK_URL = 'https://hook.us2.make.com/df5u0pyvz4vy6m8pccon863m2ifc59kd';
 
     const form = document.getElementById('fichForm');
     const statusEl = document.getElementById('status');
@@ -213,30 +213,50 @@
         let extractedText = '';
         
         try {
-          console.log('Buscando URL:', sanitizedUrl);
-          const urlResponse = await fetch(sanitizedUrl);
-          if (urlResponse.ok) {
+          console.log('🔍 Tentando buscar URL:', sanitizedUrl);
+          
+          const urlResponse = await fetch(sanitizedUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            },
+            mode: 'no-cors'  // Tenta buscar mesmo com CORS
+          });
+          
+          console.log('📊 Status da resposta:', urlResponse.status, urlResponse.statusText);
+          
+          if (urlResponse.ok || urlResponse.status === 0) {  // status 0 é comum com no-cors
             const html = await urlResponse.text();
+            console.log('✅ HTML recebido, tamanho:', html.length);
             
-            // Extrair texto limpo do HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Remover scripts, styles e outros elementos
-            doc.querySelectorAll('script, style, noscript, meta, link').forEach(el => el.remove());
-            
-            // Pegar texto e limpar
-            extractedText = doc.body.innerText
-              .replace(/\n+/g, ' ')
-              .replace(/\s+/g, ' ')
-              .trim()
-              .substring(0, 8000);
+            if (html && html.length > 100) {
+              // Extrair texto limpo do HTML
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, 'text/html');
               
-            console.log('✅ Texto extraído, tamanho:', extractedText.length);
+              // Remover scripts, styles e outros elementos
+              doc.querySelectorAll('script, style, noscript, meta, link').forEach(el => el.remove());
+              
+              // Pegar texto e limpar
+              extractedText = doc.body.innerText
+                .replace(/\n+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .substring(0, 8000);
+                
+              console.log('✅ Texto extraído com sucesso, tamanho:', extractedText.length);
+            } else {
+              console.warn('⚠️ HTML vazio ou muito pequeno');
+            }
+          } else {
+            console.warn('⚠️ Resposta não OK:', urlResponse.status);
           }
         } catch (error) {
-          console.warn('⚠️ Não consegui acessar a URL:', error);
+          console.error('❌ Erro ao buscar URL:', error.message);
+          console.warn('ℹ️ Continuando sem conteúdo extraído. Use um resumo detalhado!');
         }
+        
+        console.log('📤 Enviando payload com extracted_text tamanho:', extractedText.length);
 
         // Enviar para Make.com com texto extraído
         const payload = {
