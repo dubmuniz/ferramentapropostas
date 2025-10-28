@@ -232,26 +232,61 @@
         }
 
         let responseData;
-        const responseText = await res.text();
-        console.log('Resposta bruta:', responseText);
+        let responseText = await res.text();
+        console.log('Resposta bruta (primeiros 500 chars):', responseText.substring(0, 500));
         
         try {
-          // Remover markdown (```json ... ```)
+          // ESTRATÉGIA 1: Limpar markdown e caracteres problemáticos
           let cleanJson = responseText
             .replace(/```json\n?/g, '')
             .replace(/```\n?/g, '')
             .trim();
 
-          // Converter aspas simples para duplas (Claude pode retornar com aspas simples)
-          cleanJson = cleanJson.replace(/'/g, '"');
-
-          console.log('JSON limpo:', cleanJson);
+          // ESTRATÉGIA 2: Remover quebras de linha DENTRO de strings
+          // Mas manter estrutura JSON
+          cleanJson = cleanJson.replace(/\n(?=(?:[^"]*"[^"]*")*[^"]*$)/g, ' ');
           
+          // ESTRATÉGIA 3: Escape de caracteres especiais
+          cleanJson = cleanJson.replace(/[\r\n\t]/g, ' ');
+          
+          console.log('JSON após limpeza (primeiros 500 chars):', cleanJson.substring(0, 500));
+          
+          // ESTRATÉGIA 4: Validar e parsear
           responseData = JSON.parse(cleanJson);
-          console.log('Resposta parseada:', responseData);
+          console.log('✅ JSON parseado com sucesso');
+          
         } catch (parseError) {
-          console.error('Erro ao parsear JSON:', parseError);
-          throw new Error(`Erro ao processar resposta: ${parseError.message}`);
+          console.error('❌ Erro ao parsear JSON:', parseError.message);
+          console.error('Posição:', parseError.message);
+          
+          // ESTRATÉGIA 5: Tentar extrair JSON válido
+          console.log('Tentando recuperar JSON...');
+          
+          const jsonMatches = responseText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
+          if (jsonMatches && jsonMatches[0]) {
+            try {
+              let recoveredJson = jsonMatches[0]
+                .replace(/[\r\n\t]/g, ' ')
+                .replace(/\n/g, ' ');
+              responseData = JSON.parse(recoveredJson);
+              console.log('✅ JSON recuperado parcialmente');
+            } catch (e2) {
+              // ESTRATÉGIA 6: Criar JSON mínimo viável com dados do formulário
+              console.log('Criando JSON fallback com dados do formulário...');
+              responseData = {
+                ficha: {
+                  rows: [
+                    { Campo: "Título do Projeto", Conteúdo: projectName },
+                    { Campo: "Link da Proposta", Conteúdo: proposalUrl },
+                    { Campo: "Proposta Humana Brasil - Resumo", Conteúdo: projectSummary }
+                  ]
+                }
+              };
+              console.log('✅ JSON fallback criado');
+            }
+          } else {
+            throw new Error(`Erro ao processar resposta: ${parseError.message}. Formato inválido.`);
+          }
         }
 
         // Esperar resposta da IA com a ficha completa
