@@ -232,16 +232,10 @@
         }
 
         let responseData;
+        const responseText = await res.text();
+        console.log('Resposta bruta:', responseText);
         
         try {
-          // Tentar parsear como JSON direto (Webhook Response retorna JSON)
-          responseData = await res.json();
-          console.log('Resposta JSON:', responseData);
-        } catch (e) {
-          // Se falhar, tentar como texto e limpar
-          const responseText = await res.text();
-          console.log('Resposta bruta (texto):', responseText);
-
           // Remover markdown (```json ... ```)
           let cleanJson = responseText
             .replace(/```json\n?/g, '')
@@ -255,6 +249,9 @@
           
           responseData = JSON.parse(cleanJson);
           console.log('Resposta parseada:', responseData);
+        } catch (parseError) {
+          console.error('Erro ao parsear JSON:', parseError);
+          throw new Error(`Erro ao processar resposta: ${parseError.message}`);
         }
 
         // Esperar resposta da IA com a ficha completa
