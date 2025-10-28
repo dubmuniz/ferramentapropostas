@@ -43,16 +43,13 @@
     .result-row{display:grid;grid-template-columns:150px 1fr;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e8ee}
     .result-row:last-child{border-bottom:none}
     .result-label{font-weight:600;color:var(--ink)}
-    .result-value{color:var(--muted)}
+    .result-value{color:var(--muted);white-space:pre-wrap;word-break:break-word;line-height:1.6}
   </style>
 </head>
 <body>
   <header class="wrap">
     <div class="brand">
-      <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
-        <circle cx="32" cy="32" r="30" fill="none" stroke="#1E7E34" stroke-width="4"/>
-        <path d="M20 34c6-10 18-10 24 0M24 40c4-6 12-6 16 0" fill="none" stroke="#1E7E34" stroke-width="3" stroke-linecap="round"/>
-      </svg>
+      <img src="./humana-logo.png" alt="Humana Logo" class="logo">
       <strong>Humana Povo para Povo Brasil</strong>
     </div>
     <h1>Gerador de Ficha de Identificação</h1>
@@ -165,7 +162,11 @@
       const rows = [['Campo', 'Conteúdo']];
       
       for (const [key, value] of Object.entries(fichadata)) {
-        rows.push([key.replace(/_/g, ' '), String(value || '')]);
+        // Converter \n (quebra de linha) em quebra real
+        let displayValue = String(value || '');
+        // Garantir que \n seja quebra real, não escape
+        displayValue = displayValue.replace(/\\n/g, '\n');
+        rows.push([key.replace(/_/g, ' '), displayValue]);
       }
       
       const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -176,11 +177,11 @@
         {wch: 70}   // Conteúdo (mais largo para quebras de linha)
       ];
       
-      // Configurar height da linha de cabeçalho
+      // Calcular altura automática baseado no conteúdo
       if (!ws['!rows']) ws['!rows'] = [];
-      ws['!rows'][0] = {hpx: 25};
+      ws['!rows'][0] = {hpx: 30}; // Cabeçalho com altura fixa
       
-      // Habilitar quebra de linha automática em todas as células
+      // Habilitar quebra de linha automática em TODAS as células
       for (let i = 0; i < rows.length; i++) {
         // Célula Campo (coluna A)
         const cellA = String.fromCharCode(65) + (i + 1);
@@ -190,12 +191,21 @@
         if (!ws[cellA]) ws[cellA] = {};
         if (!ws[cellB]) ws[cellB] = {};
         
-        // Estilos
+        // Garantir que o valor é string e tratar quebras
+        if (ws[cellB] && ws[cellB].v) {
+          ws[cellB].v = String(ws[cellB].v).replace(/\\n/g, '\n');
+        }
+        if (ws[cellA] && ws[cellA].v) {
+          ws[cellA].v = String(ws[cellA].v).replace(/\\n/g, '\n');
+        }
+        
+        // Estilos com word wrap ATIVADO
         const style = {
           alignment: {
-            wrapText: true,
-            vertical: 'top',
-            horizontal: 'left'
+            wrapText: true,        // ✅ FORÇAR quebra de texto
+            vertical: 'top',       // Alinhar ao topo
+            horizontal: 'left',    // Alinhar à esquerda
+            shrinkToFit: false     // Não encolher
           },
           font: {
             name: 'Calibri',
@@ -203,38 +213,49 @@
           }
         };
         
-        // Cabeçalho com fundo cinza
+        // Calcular altura das linhas baseado no número de quebras
+        let lineCount = 1;
+        if (ws[cellB] && ws[cellB].v && typeof ws[cellB].v === 'string') {
+          lineCount = (ws[cellB].v.match(/\n/g) || []).length + 1;
+        }
+        
+        // Definir altura mínima: 20px por linha + padding
+        const minHeight = Math.max(25, lineCount * 20);
+        if (i > 0) {
+          ws['!rows'][i] = {hpx: minHeight};
+        }
+        
+        // Cabeçalho com fundo verde Humana
         if (i === 0) {
-          style.fill = {fgColor: {rgb: 'E7E6E6'}};
+          style.fill = {
+            fgColor: {rgb: '1E7E34'},  // Verde Humana
+            patternType: 'solid'
+          };
           style.font.bold = true;
+          style.font.color = {rgb: 'FFFFFF'};  // Texto branco
           style.alignment.horizontal = 'center';
+          style.alignment.vertical = 'center';
         }
         
         ws[cellA].s = style;
         ws[cellB].s = style;
       }
       
-      // Processar quebras de linha: substituir \\n por \n real
-      Object.keys(ws).forEach(cellRef => {
-        if (cellRef[0] !== '!' && ws[cellRef] && ws[cellRef].v && typeof ws[cellRef].v === 'string') {
-          // Substituir \\n (escape) por \n (quebra real)
-          ws[cellRef].v = ws[cellRef].v.replace(/\\n/g, '\n');
-        }
-      });
+      XLSX.utils.book_append_sheet(wb, ws, 'Ficha de Identificação');
       
-      XLSX.utils.book_append_sheet(wb, ws, 'Ficha');
-      
-      const fileName = `Ficha-Identificacao-${Date.now()}.xlsx`;
+      const fileName = `Ficha-Identificacao-${new Date().toLocaleString('pt-BR').replace(/[/:]/g, '-')}.xlsx`;
       XLSX.writeFile(wb, fileName);
       
-      console.log('✅ XLSX gerado com quebra de linhas:', fileName);
+      console.log('✅ XLSX gerado com quebra de linhas automática:', fileName);
     }
 
     function mostrarPreview(fichadata) {
       let html = '<h3>📋 Prévia da Ficha Gerada</h3>';
       for (const [key, value] of Object.entries(fichadata)) {
         const label = key.replace(/_/g, ' ').toUpperCase();
-        const val = String(value || '').substring(0, 200);
+        const val = String(value || '')
+          .replace(/\n/g, '<br>')  // Converter \n em <br> para exibição
+          .substring(0, 300);
         html += `<div class="result-row"><div class="result-label">${label}</div><div class="result-value">${val}</div></div>`;
       }
       previewEl.innerHTML = html;
