@@ -14,7 +14,7 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    .wrap{max-width:800px;margin:0 auto;padding:20px}
+    .wrap{max-width:900px;margin:0 auto;padding:20px}
     header{text-align:center;padding-top:28px}
     .brand{display:inline-flex;align-items:center;gap:12px;justify-content:center}
     .logo{width:100px;height:auto}
@@ -25,11 +25,11 @@
     input,textarea{width:100%;margin-top:6px;border:1px solid #d8dee4;border-radius:8px;padding:12px;font:inherit;line-height:1.5}
     textarea{resize:vertical;min-height:120px}
     input[type=url]{word-break:break-all}
-    button{background:var(--hb-green);color:#fff;border:0;border-radius:10px;padding:12px 24px;font-weight:600;cursor:pointer;transition:all 0.2s;font-size:16px;margin-top:20px;width:100%}
+    button{background:var(--hb-green);color:#fff;border:0;border-radius:10px;padding:12px 24px;font-weight:600;cursor:pointer;transition:all .2s;font-size:16px;margin-top:20px;width:100%}
     button:hover:not(:disabled){filter:brightness(1.05)}
-    button:disabled{opacity:0.6;cursor:not-allowed}
+    button:disabled{opacity:.6;cursor:not-allowed}
     .btn{display:inline-block;background:var(--hb-accent);color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:12px;text-align:center;width:100%}
-    .btn:hover{filter:brightness(0.95)}
+    .btn:hover{filter:brightness(.95)}
     .hidden{display:none}
     .status{min-height:22px;color:var(--muted);margin:16px 0 0;font-size:14px}
     .status.error{color:#d32f2f}
@@ -40,7 +40,7 @@
     .divider{height:1px;background:#e3e8ee;margin:20px 0}
     .result-preview{background:#f5f5f5;border-left:4px solid var(--hb-green);padding:16px;border-radius:8px;margin-top:16px}
     .result-preview h3{margin:0 0 12px;color:var(--hb-green)}
-    .result-row{display:grid;grid-template-columns:150px 1fr;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e8ee}
+    .result-row{display:grid;grid-template-columns:250px 1fr;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e8ee}
     .result-row:last-child{border-bottom:none}
     .result-label{font-weight:600;color:var(--ink)}
     .result-value{color:var(--muted);white-space:pre-wrap;word-break:break-word;line-height:1.6}
@@ -53,88 +53,92 @@
       <strong>Humana Povo para Povo Brasil</strong>
     </div>
     <h1>Gerador de Ficha de Identificação</h1>
-    <p class="lead">Preencha as informações do projeto e a IA irá gerar uma ficha completa e aprimorada.</p>
+    <p class="lead">Preencha os campos, a IA gera a ficha padronizada em português.</p>
   </header>
 
   <main class="wrap">
     <form id="fichForm" novalidate>
-      
-      <div class="section-title">📋 Informações do Projeto</div>
+      <div class="section-title">Informações do Projeto</div>
 
       <label>Nome do Projeto *
-        <input name="project_name" type="text" required placeholder="Ex: Educação para o Desenvolvimento Sustentável - Edital 2025" maxlength="200">
-        <div class="note">Nome claro e objetivo do projeto</div>
+        <input name="project_name" type="text" required maxlength="200" placeholder="Ex: Restauração Ecológica RJ 2026">
+        <div class="note">Nome claro e objetivo</div>
       </label>
 
-      <label>Link da Proposta / Edital *
-        <input name="proposal_url" type="url" required placeholder="https://www.fundacaoabc.org.br/edital/educacao-desenvolvimento-sustentavel-2025">
-        <div class="note">Link da chamada pública ou documento da proposta</div>
+      <label>Link da Proposta ou Edital *
+        <input name="proposal_url" type="url" required placeholder="https://exemplo.org/edital">
+        <div class="note">Informe a página oficial quando possível</div>
       </label>
 
-      <label>Arquivo da Proposta (PDF, DOCX ou TXT) - Opcional
-        <input type="file" id="editorialFile" accept=".pdf,.docx,.doc,.txt" />
-        <div class="note">Se o link não funcionar, envie o arquivo diretamente. Máximo 5MB.</div>
+      <label>Arquivo do Edital ou Proposta, PDF DOCX DOC TXT, opcional
+        <input type="file" id="editorialFile" accept=".pdf,.docx,.doc,.txt">
+        <div class="note">Máximo 5 MB</div>
       </label>
 
       <label>Resumo Geral do Projeto *
-        <textarea name="project_summary" required placeholder="Ex: Projeto voltado para capacitação de professores da rede pública em metodologias ativas de ensino. O projeto visa alcançar 150 educadores em escolas de zonas urbanas e periféricas, promovendo uso de tecnologia educacional e práticas inovadoras. Duração de 8 meses com acompanhamento contínuo e avaliação de impacto."></textarea>
-        <div class="note">Resumo em suas palavras - pode ser informal, a IA vai corrigir e expandir</div>
+        <textarea name="project_summary" required placeholder="Resumo em suas palavras, a IA melhora a fluência"></textarea>
       </label>
 
       <div class="divider"></div>
 
       <div style="text-align:center;margin-top:20px">
-        <button type="submit" id="submitBtn">✨ Gerar Ficha</button>
+        <button type="submit" id="submitBtn">Gerar Ficha</button>
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </div>
 
       <div id="result" class="hidden" style="margin-top:24px">
         <div class="result-preview" id="preview"></div>
-        <a id="downloadLink" class="btn" href="#" download>⬇️ Baixar Ficha em XLSX</a>
-        <div class="note" style="margin-top:12px">O arquivo está pronto para download. Você pode abrir, editar e salvar no Excel.</div>
+        <a id="downloadLink" class="btn" href="#" download>Baixar Ficha em XLSX</a>
+        <div class="note" style="margin-top:12px">Abra no Excel e edite se necessário</div>
       </div>
-
     </form>
   </main>
 
-  <footer>© Humana Povo para Povo Brasil | Gerador de Ficha de Identificação</footer>
+  <footer>© Humana Povo para Povo Brasil</footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
-    // URL do webhook Make.com
     const WEBHOOK_URL = 'https://hook.us2.make.com/je5qxm1aw515cjz6qm49dsbeesq73zci';
 
-    // 🔑 Função para extrair texto de arquivo
-    async function extractTextFromFile(file) {
-      try {
-        statusEl.textContent = '⏳ Processando arquivo...';
-        console.log('📄 Processando arquivo:', file.name, file.type);
-        
-        if (file.type === 'text/plain') {
-          // TXT
+    function b64utf8(str){
+      try{ return btoa(unescape(encodeURIComponent(String(str)))); }
+      catch{ return ""; }
+    }
+    function sanitizePlain(str){
+      return String(str||"")
+        .replace(/[\u0000-\u001F\u007F]/g," ")
+        .replace(/\r/g," ").replace(/\t/g," ")
+        .replace(/\s+/g," ").trim();
+    }
+
+    async function extractTextFromFile(file){
+      const statusEl = document.getElementById('status');
+      try{
+        statusEl.textContent = 'Processando arquivo';
+        if(file.type === 'text/plain'){
           const text = await file.text();
-          return text.substring(0, 8000);
-        } else if (file.type === 'application/pdf') {
-          // PDF
+          return text.substring(0,8000);
+        }else if(file.type === 'application/pdf'){
           const arrayBuffer = await file.arrayBuffer();
           pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
           const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
           let text = '';
-          for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
+          for(let i=1;i<=Math.min(pdf.numPages,20);i++){
             const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            text += textContent.items.map(item => item.str).join(' ') + ' ';
+            const tc = await page.getTextContent();
+            text += tc.items.map(it=>it.str).join(' ') + ' ';
           }
-          return text.trim().substring(0, 8000);
-        } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-                   file.type === 'application/msword') {
-          // DOCX / DOC
+          return text.trim().substring(0,8000);
+        }else if(
+          file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+          file.type === 'application/msword'
+        ){
           const arrayBuffer = await file.arrayBuffer();
           const result = await mammoth.extractRawText({arrayBuffer});
-          return result.value.trim().substring(0, 8000);
+          return result.value.trim().substring(0,8000);
         }
-      } catch (error) {
-        console.error('❌ Erro ao processar arquivo:', error);
+      }catch(e){
+        console.error('Erro no arquivo', e);
         return '';
       }
     }
@@ -146,304 +150,136 @@
     const linkEl = document.getElementById('downloadLink');
     const btn = document.getElementById('submitBtn');
 
-    function validURL(u) {
-      try {
-        const x = new URL(u);
-        return ['http:', 'https:'].includes(x.protocol);
-      } catch {
-        return false;
-      }
+    function validURL(u){
+      try{ const x=new URL(u); return ['http:','https:'].includes(x.protocol); }
+      catch{ return false; }
     }
 
-    function gerarXLSX(fichadata) {
+    function gerarXLSX(fichadata){
       const wb = XLSX.utils.book_new();
-      
-      // Preparar dados para XLSX - converter objeto em array de arrays
-      const rows = [['Campo', 'Conteúdo']];
-      
-      for (const [key, value] of Object.entries(fichadata)) {
-        // Converter \n (quebra de linha) em quebra real
-        let displayValue = String(value || '');
-        // Garantir que \n seja quebra real, não escape
-        displayValue = displayValue.replace(/\\n/g, '\n');
-        rows.push([key.replace(/_/g, ' '), displayValue]);
+      const rows = [['Campo','Conteúdo']];
+      for(const [key,value] of Object.entries(fichadata)){
+        let displayValue = String(value||'').replace(/\\n/g,'\n');
+        rows.push([key, displayValue]);
       }
-      
       const ws = XLSX.utils.aoa_to_sheet(rows);
-      
-      // Configurar largura das colunas
-      ws['!cols'] = [
-        {wch: 35},  // Campo
-        {wch: 70}   // Conteúdo (mais largo para quebras de linha)
-      ];
-      
-      // Calcular altura automática baseado no conteúdo
-      if (!ws['!rows']) ws['!rows'] = [];
-      ws['!rows'][0] = {hpx: 30}; // Cabeçalho com altura fixa
-      
-      // Habilitar quebra de linha automática em TODAS as células
-      for (let i = 0; i < rows.length; i++) {
-        // Célula Campo (coluna A)
-        const cellA = String.fromCharCode(65) + (i + 1);
-        // Célula Conteúdo (coluna B)
-        const cellB = String.fromCharCode(66) + (i + 1);
-        
-        if (!ws[cellA]) ws[cellA] = {};
-        if (!ws[cellB]) ws[cellB] = {};
-        
-        // Garantir que o valor é string e tratar quebras
-        if (ws[cellB] && ws[cellB].v) {
-          ws[cellB].v = String(ws[cellB].v).replace(/\\n/g, '\n');
-        }
-        if (ws[cellA] && ws[cellA].v) {
-          ws[cellA].v = String(ws[cellA].v).replace(/\\n/g, '\n');
-        }
-        
-        // Estilos com word wrap ATIVADO
+      ws['!cols'] = [{wch:40},{wch:100}];
+      if(!ws['!rows']) ws['!rows']=[];
+      ws['!rows'][0] = {hpx:30};
+      for(let i=0;i<rows.length;i++){
+        const A = 'A'+(i+1), B='B'+(i+1);
+        ws[A] = ws[A]||{}; ws[B]=ws[B]||{};
         const style = {
-          alignment: {
-            wrapText: true,        // ✅ FORÇAR quebra de texto
-            vertical: 'top',       // Alinhar ao topo
-            horizontal: 'left',    // Alinhar à esquerda
-            shrinkToFit: false     // Não encolher
-          },
-          font: {
-            name: 'Calibri',
-            sz: 11
-          }
+          alignment:{wrapText:true,vertical:'top',horizontal:'left',shrinkToFit:false},
+          font:{name:'Calibri',sz:11}
         };
-        
-        // Calcular altura das linhas baseado no número de quebras
-        let lineCount = 1;
-        if (ws[cellB] && ws[cellB].v && typeof ws[cellB].v === 'string') {
-          lineCount = (ws[cellB].v.match(/\n/g) || []).length + 1;
+        if(i===0){
+          style.fill = {patternType:'solid', fgColor:{rgb:'1E7E34'}};
+          style.font.bold = true; style.font.color = {rgb:'FFFFFF'};
+          style.alignment.horizontal='center'; style.alignment.vertical='center';
+        }else{
+          const lines = (String(ws[B].v||'').match(/\n/g)||[]).length + 1;
+          ws['!rows'][i] = {hpx: Math.max(25, lines*20)};
         }
-        
-        // Definir altura mínima: 20px por linha + padding
-        const minHeight = Math.max(25, lineCount * 20);
-        if (i > 0) {
-          ws['!rows'][i] = {hpx: minHeight};
-        }
-        
-        // Cabeçalho com fundo verde Humana
-        if (i === 0) {
-          style.fill = {
-            fgColor: {rgb: '1E7E34'},  // Verde Humana
-            patternType: 'solid'
-          };
-          style.font.bold = true;
-          style.font.color = {rgb: 'FFFFFF'};  // Texto branco
-          style.alignment.horizontal = 'center';
-          style.alignment.vertical = 'center';
-        }
-        
-        ws[cellA].s = style;
-        ws[cellB].s = style;
+        ws[A].s = style; ws[B].s = style;
       }
-      
       XLSX.utils.book_append_sheet(wb, ws, 'Ficha de Identificação');
-      
-      const fileName = `Ficha-Identificacao-${new Date().toLocaleString('pt-BR').replace(/[/:]/g, '-')}.xlsx`;
+      const fileName = `Ficha-Identificacao-${new Date().toLocaleString('pt-BR').replace(/[/:]/g,'-')}.xlsx`;
       XLSX.writeFile(wb, fileName);
-      
-      console.log('✅ XLSX gerado com quebra de linhas automática:', fileName);
     }
 
-    function mostrarPreview(fichadata) {
-      let html = '<h3>📋 Prévia da Ficha Gerada</h3>';
-      for (const [key, value] of Object.entries(fichadata)) {
-        const label = key.replace(/_/g, ' ').toUpperCase();
-        const val = String(value || '')
-          .replace(/\n/g, '<br>')  // Converter \n em <br> para exibição
-          .substring(0, 300);
-        html += `<div class="result-row"><div class="result-label">${label}</div><div class="result-value">${val}</div></div>`;
+    function mostrarPreview(fichadata){
+      let html = '<h3>Prévia da Ficha</h3>';
+      for(const [k,v] of Object.entries(fichadata)){
+        const val = String(v||'').replace(/\n/g,'<br>').substring(0,800);
+        html += `<div class="result-row"><div class="result-label">${k}</div><div class="result-value">${val}</div></div>`;
       }
       previewEl.innerHTML = html;
     }
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e)=>{
       e.preventDefault();
-      
       btn.disabled = true;
-      btn.textContent = '⏳ Gerando...';
+      btn.textContent = 'Gerando';
       statusEl.textContent = '';
-      statusEl.classList.remove('error', 'success');
+      statusEl.classList.remove('error','success');
       resultEl.classList.add('hidden');
       previewEl.innerHTML = '';
 
-      try {
-        // 1️⃣ Validar e sanitizar dados do formulário
+      try{
         const projectName = form.project_name.value.trim();
         const proposalUrl = form.proposal_url.value.trim();
         const projectSummary = form.project_summary.value.trim();
-        
-        if (!projectName || !proposalUrl || !projectSummary) {
-          throw new Error('Por favor, preencha todos os campos obrigatórios (*');
-        }
+        if(!projectName || !proposalUrl || !projectSummary) throw new Error('Preencha os campos obrigatórios');
+        if(!validURL(proposalUrl)) throw new Error('URL inválida');
 
-        if (!validURL(proposalUrl)) {
-          throw new Error('URL da proposta inválida');
-        }
+        statusEl.textContent = 'Processando entrada';
 
-        statusEl.textContent = '📤 Enviando dados...';
-
-        // 2️⃣ Processar arquivo se houver
         let extractedText = '';
         const fileInput = document.getElementById('editorialFile');
-        
-        if (fileInput && fileInput.files && fileInput.files[0]) {
-          const file = fileInput.files[0];
-          extractedText = await extractTextFromFile(file);
-          console.log('✅ Texto extraído do arquivo:', extractedText.length);
-        } else {
-          console.log('❌ Nenhum arquivo selecionado, tentando URL...');
-          try {
-            const urlResponse = await fetch(proposalUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-              },
-              mode: 'no-cors'
-            });
-            
-            console.log('📊 Status da resposta:', urlResponse.status);
-            
-            if (urlResponse.ok || urlResponse.status === 0) {
-              const html = await urlResponse.text();
-              console.log('✅ HTML recebido, tamanho:', html.length);
-              
-              if (html && html.length > 100) {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                doc.querySelectorAll('script, style, noscript, meta, link').forEach(el => el.remove());
-                
-                extractedText = doc.body.innerText
-                  .replace(/\n+/g, ' ')
-                  .replace(/\s+/g, ' ')
-                  .trim()
-                  .substring(0, 8000);
-                  
-                console.log('✅ Texto extraído da URL:', extractedText.length);
-              }
-            }
-          } catch (error) {
-            console.error('❌ Erro ao buscar URL:', error.message);
-            extractedText = '';
-          }
-        }
-        
-        // Se ainda não tem texto extraído, usa o resumo
-        if (!extractedText || extractedText.length === 0) {
+        if(fileInput && fileInput.files && fileInput.files[0]){
+          extractedText = await extractTextFromFile(fileInput.files[0]);
+        }else{
           extractedText = projectSummary;
         }
 
-        // 3️⃣ Preparar payload com validações
         const payload = {
-          project_name: projectName,
-          proposal_url: proposalUrl,
-          project_summary: projectSummary,
-          extracted_text: extractedText,
+          project_name: sanitizePlain(projectName),
+          proposal_url: sanitizePlain(proposalUrl),
+          project_summary: sanitizePlain(projectSummary),
+          extracted_text: sanitizePlain(extractedText),
+          project_name_b64: b64utf8(projectName),
+          proposal_url_b64: b64utf8(proposalUrl),
+          project_summary_b64: b64utf8(projectSummary),
+          extracted_text_b64: b64utf8(extractedText),
+          filled_at: new Date().toISOString().slice(0,10),
           type: 'ficha'
         };
 
-        console.log('🔹 Payload preparado:', {
-          project_name: payload.project_name.substring(0, 50),
-          proposal_url: payload.proposal_url,
-          project_summary: payload.project_summary.substring(0, 50),
-          extracted_text_length: payload.extracted_text.length,
-          type: payload.type
-        });
-
-        // 4️⃣ Enviar para Make.com
-        statusEl.textContent = '🚀 Processando com IA...';
-        
-        const res = await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+        statusEl.textContent = 'Enviando para o Make';
+        const res = await fetch(WEBHOOK_URL,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
           body: JSON.stringify(payload)
         });
-        
-        console.log('✅ Enviado para Make. Status:', res.status);
-
-        if (!res.ok) {
-          const errorText = await res.text().catch(() => 'Erro desconhecido');
-          throw new Error(`Erro ${res.status}: ${errorText}`);
+        if(!res.ok){
+          const t = await res.text().catch(()=> '');
+          throw new Error(`Erro ${res.status} ${t}`);
         }
 
-        // 5️⃣ Processar resposta
         let responseText = await res.text();
-        console.log('📥 Resposta recebida (primeiros 300 chars):', responseText.substring(0, 300));
-        
         let responseData;
-        
-        try {
-          // Tentar parsear direto
+        try{
           responseData = JSON.parse(responseText);
-          console.log('✅ JSON parseado com sucesso');
-        } catch (parseError) {
-          console.log('⚠️ Tentando limpar JSON...');
-          
-          // Limpar markdown e caracteres inválidos
-          let cleanJson = responseText
-            .replace(/```json\n?/g, '')
-            .replace(/```\n?/g, '')
-            .replace(/[\r\n\t]/g, ' ')
-            .trim();
-          
-          try {
-            responseData = JSON.parse(cleanJson);
-            console.log('✅ JSON parseado após limpeza');
-          } catch (e2) {
-            console.error('❌ Erro ao parsear JSON limpo:', e2.message);
-            throw new Error('Resposta da IA em formato inválido');
-          }
+        }catch{
+          const clean = responseText.replace(/```json\n?/g,'').replace(/```\n?/g,'').replace(/[\r\n\t]/g,' ').trim();
+          responseData = JSON.parse(clean);
         }
 
-        // 6️⃣ Extrair dados da ficha
         let fichadata = null;
-        
-        if (responseData?.ficha?.rows) {
-          // Se vem com array de rows
-          fichadata = Object.fromEntries(
-            responseData.ficha.rows.map(r => [
-              String(r.Campo || '').toLowerCase().replace(/\s+/g, '_'),
-              r.Conteúdo || ''
-            ])
-          );
-        } else if (responseData?.ficha) {
+        if(responseData?.ficha?.rows){
+          fichadata = Object.fromEntries(responseData.ficha.rows.map(r=>[String(r.Campo||'').trim(), r.Conteúdo||'']));
+        }else if(responseData?.ficha){
           fichadata = responseData.ficha;
-        } else if (responseData?.FichadeIdentificacao) {
-          fichadata = responseData.FichadeIdentificacao;
-        } else if (typeof responseData === 'object' && Object.keys(responseData).length > 0) {
-          // Se a resposta toda é a ficha
+        }else if(typeof responseData === 'object' && Object.keys(responseData).length>0){
           fichadata = responseData;
         }
+        if(!fichadata || Object.keys(fichadata).length===0) throw new Error('Resposta sem dados de ficha');
 
-        if (!fichadata || typeof fichadata !== 'object' || Object.keys(fichadata).length === 0) {
-          throw new Error('Nenhum dado de ficha encontrado na resposta');
-        }
-
-        console.log('✅ Ficha extraída com', Object.keys(fichadata).length, 'campos');
-        
-        // 7️⃣ Gerar XLSX e mostrar resultado
         gerarXLSX(fichadata);
         mostrarPreview(fichadata);
         resultEl.classList.remove('hidden');
-        statusEl.textContent = '✅ Ficha gerada com sucesso!';
+        statusEl.textContent = 'Ficha gerada com sucesso';
         statusEl.classList.add('success');
-
-      } catch (err) {
-        console.error('❌ ERRO:', err);
-        statusEl.textContent = `❌ Erro: ${err.message}`;
+      }catch(err){
+        statusEl.textContent = `Erro: ${err.message}`;
         statusEl.classList.add('error');
-      } finally {
+        console.error(err);
+      }finally{
         btn.disabled = false;
-        btn.textContent = '✨ Gerar Ficha';
+        btn.textContent = 'Gerar Ficha';
       }
     });
   </script>
-
 </body>
 </html>
