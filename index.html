@@ -253,6 +253,56 @@
       previewEl.innerHTML = html;
     }
 
+    function buildMakeFixMessage(details){
+      const msg = [
+        "O webhook do Make respondeu sem JSON.",
+        details ? `Detalhes: ${details}` : "",
+        "",
+        "Correção no Make:",
+        "1) No final do cenário, adicione o módulo Webhooks, Response.",
+        "2) Configure Status = 200.",
+        "3) Header Content-Type = application/json; charset=utf-8.",
+        "4) Body: devolva um JSON com a ficha, por exemplo {\"ficha\": {...}} ou {\"ficha\": {\"rows\": [...]}}.",
+        "",
+        "O arquivo (PDF/DOCX) é opcional e não causa esse erro."
+      ].filter(Boolean).join("\n");
+      return msg;
+    }
+
+    async function readResponseAsJsonOrThrow(res){
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+
+      // Alguns cenários do Make respondem 202 Accepted sem body
+      const rawText = await res.text().catch(()=> "");
+      const trimmed = String(rawText || "").trim();
+
+      if(contentType.includes('application/json')){
+        try{
+          return JSON.parse(trimmed || "{}");
+        }catch(e){
+          throw new Error(buildMakeFixMessage("Content-Type é JSON, mas o corpo não é JSON válido."));
+        }
+      }
+
+      // Se veio texto simples "Accepted" ou vazio, não há como montar a ficha no front
+      if(!trimmed || /^accepted$/i.test(trimmed) || res.status === 202){
+        throw new Error(buildMakeFixMessage(`HTTP ${res.status}${trimmed ? `, body="${trimmed.substring(0,80)}"` : ""}`));
+      }
+
+      // Tentativa de limpeza de markdown fences, se algum módulo estiver envolvendo a saída
+      const clean = trimmed
+        .replace(/```json\s*/gi,'')
+        .replace(/```\s*/g,'')
+        .replace(/[\r\n\t]/g,' ')
+        .trim();
+
+      try{
+        return JSON.parse(clean);
+      }catch(e){
+        throw new Error(buildMakeFixMessage(`HTTP ${res.status}, body começa com "${clean.substring(0,30)}"`));
+      }
+    }
+
     form.addEventListener('submit', async (e)=>{
       e.preventDefault();
       btn.disabled = true;
@@ -261,6 +311,9 @@
       statusEl.classList.remove('error','success');
       resultEl.classList.add('hidden');
       previewEl.innerHTML = '';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(()=> controller.abort(), 120000);
 
       try{
         const projectName = form.project_name.value.trim();
@@ -279,7 +332,6 @@
           extractedText = projectSummary;
         }
 
-        // Injeta dicas de datas direto no texto enviado ao Claude (sem criar novos campos)
         const dateHints = makeDateHints(extractedText);
         const extractedTextWithHints = (extractedText || "") + (dateHints ? dateHints : "");
 
@@ -297,33 +349,37 @@
         };
 
         statusEl.textContent = 'Enviando para o Make';
+
         const res = await fetch(WEBHOOK_URL,{
           method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
+          headers:{
+            'Content-Type':'application/json',
+            'Accept':'application/json, text/plain;q=0.9, */*;q=0.8'
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
-        if(!res.ok){
+
+        if(!res.ok && res.status !== 202){
           const t = await res.text().catch(()=> '');
           throw new Error(`Erro ${res.status} ${t}`);
         }
 
-        let responseText = await res.text();
-        let responseData;
-        try{
-          responseData = JSON.parse(responseText);
-        }catch{
-          const clean = responseText.replace(/```json\n?/g,'').replace(/```\n?/g,'').replace(/[\r\n\t]/g,' ').trim();
-          responseData = JSON.parse(clean);
-        }
+        statusEl.textContent = 'Processando resposta do Make';
+
+        const responseData = await readResponseAsJsonOrThrow(res);
 
         let fichadata = null;
         if(responseData?.ficha?.rows){
-          fichadata = Object.fromEntries(responseData.ficha.rows.map(r=>[String(r.Campo||'').trim(), r.Conteúdo||'']));
-        }else if(responseData?.ficha){
+          fichadata = Object.fromEntries(
+            responseData.ficha.rows.map(r=>[String(r.Campo||'').trim(), r.Conteúdo||''])
+          );
+        }else if(responseData?.ficha && typeof responseData.ficha === 'object'){
           fichadata = responseData.ficha;
         }else if(typeof responseData === 'object' && Object.keys(responseData).length>0){
           fichadata = responseData;
         }
+
         if(!fichadata || Object.keys(fichadata).length===0) throw new Error('Resposta sem dados de ficha');
 
         gerarXLSX(fichadata);
@@ -332,10 +388,14 @@
         statusEl.textContent = 'Ficha gerada com sucesso';
         statusEl.classList.add('success');
       }catch(err){
-        statusEl.textContent = `Erro: ${err.message}`;
+        const msg = (err && err.name === 'AbortError')
+          ? 'Tempo excedido ao aguardar o Make. Verifique se o cenário está rodando e respondendo com JSON.'
+          : `Erro: ${err.message}`;
+        statusEl.textContent = msg;
         statusEl.classList.add('error');
         console.error(err);
       }finally{
+        clearTimeout(timeoutId);
         btn.disabled = false;
         btn.textContent = 'Gerar Ficha';
       }
